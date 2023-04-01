@@ -11,17 +11,17 @@ defmodule AccountsManagementAPI.UsersTest do
     @system_identifier "my_cool_system"
 
     @invalid_attrs %{
-      confirmed_at: nil,
-      email: nil,
-      email_verified: nil,
-      last_name: nil,
-      locale: nil,
-      name: nil,
-      password_hash: nil,
-      picture: nil,
-      start_date: nil,
-      status: nil,
-      system_identifier: nil
+      "confirmed_at" => nil,
+      "email" => nil,
+      "email_verified" => nil,
+      "last_name" => nil,
+      "locale" => nil,
+      "name" => nil,
+      "password_hash" => nil,
+      "picture" => nil,
+      "start_date" => nil,
+      "status" => nil,
+      "system_identifier" => nil
     }
 
     test "list_accounts/0 returns all accounts" do
@@ -38,30 +38,29 @@ defmodule AccountsManagementAPI.UsersTest do
 
     test "create_account/1 with valid data creates a account" do
       valid_attrs = %{
-        confirmed_at: ~N[2023-03-31 09:07:00],
-        email: "some email",
-        email_verified: true,
-        last_name: "some last_name",
-        locale: "some locale",
-        name: "some name",
-        password_hash: "some password_hash",
-        picture: "some picture",
-        start_date: ~N[2023-03-31 09:07:00],
-        status: "some status",
-        system_identifier: "some system_identifier"
+        "confirmed_at" => ~N[2023-03-31 09:07:00],
+        "email" => "bar@foo.com",
+        "email_verified" => true,
+        "last_name" => "some last_name",
+        "locale" => "en",
+        "name" => "some name",
+        "password" => "some!Password_hash",
+        "picture" => "some picture",
+        "start_date" => ~N[2023-03-31 09:07:00],
+        "system_identifier" => "some system_identifier"
       }
 
       assert {:ok, %Account{} = account} = Users.create_account(valid_attrs)
       assert account.confirmed_at == ~N[2023-03-31 09:07:00]
-      assert account.email == "some email"
+      assert account.email == "bar@foo.com"
       assert account.email_verified == true
       assert account.last_name == "some last_name"
-      assert account.locale == "some locale"
+      assert account.locale == "en"
       assert account.name == "some name"
-      assert account.password_hash == "some password_hash"
+      assert account.password_hash != nil
       assert account.picture == "some picture"
       assert account.start_date == ~N[2023-03-31 09:07:00]
-      assert account.status == "some status"
+      assert account.status == "pending"
       assert account.system_identifier == "some system_identifier"
     end
 
@@ -73,30 +72,29 @@ defmodule AccountsManagementAPI.UsersTest do
       account = insert(:account)
 
       update_attrs = %{
-        confirmed_at: ~N[2023-04-01 09:07:00],
-        email: "some updated email",
-        email_verified: false,
-        last_name: "some updated last_name",
-        locale: "some updated locale",
-        name: "some updated name",
-        password_hash: "some updated password_hash",
-        picture: "some updated picture",
-        start_date: ~N[2023-04-01 09:07:00],
-        status: "some updated status",
-        system_identifier: "some updated system_identifier"
+        "confirmed_at" => ~N[2023-04-01 09:07:00],
+        "email" => "bar@foo.com",
+        "email_verified" => false,
+        "last_name" => "some updated last_name",
+        "locale" => "en",
+        "name" => "some updated name",
+        "password" => "someUpdatedPassword_hash!",
+        "picture" => "some updated picture",
+        "start_date" => ~N[2023-04-01 09:07:00],
+        "status" => "pending",
+        "system_identifier" => "some updated system_identifier"
       }
 
       assert {:ok, %Account{} = account} = Users.update_account(account, update_attrs)
       assert account.confirmed_at == ~N[2023-04-01 09:07:00]
-      assert account.email == "some updated email"
+      assert account.email == "bar@foo.com"
       assert account.email_verified == false
       assert account.last_name == "some updated last_name"
-      assert account.locale == "some updated locale"
+      assert account.locale == "en"
       assert account.name == "some updated name"
-      assert account.password_hash == "some updated password_hash"
       assert account.picture == "some updated picture"
       assert account.start_date == ~N[2023-04-01 09:07:00]
-      assert account.status == "some updated status"
+      assert account.status == "pending"
       assert account.system_identifier == "some updated system_identifier"
     end
 

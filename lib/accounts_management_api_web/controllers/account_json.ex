@@ -19,7 +19,6 @@ defmodule AccountsManagementAPIWeb.AccountJSON do
     %{
       id: account.id,
       email: account.email,
-      password_hash: account.password_hash,
       email_verified: account.email_verified,
       name: account.name,
       last_name: account.last_name,

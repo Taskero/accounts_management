@@ -5,34 +5,10 @@ defmodule AccountsManagementAPIWeb.AccountControllerTest do
 
   alias AccountsManagementAPI.Users.Account
 
+  doctest AccountsManagementAPIWeb.AccountController
+
   @system_identifier "my_cool_system"
 
-  @create_attrs %{
-    confirmed_at: ~N[2023-03-31 09:07:00],
-    email: "some email",
-    email_verified: true,
-    last_name: "some last_name",
-    locale: "some locale",
-    name: "some name",
-    password_hash: "some password_hash",
-    picture: "some picture",
-    start_date: ~N[2023-03-31 09:07:00],
-    status: "some status",
-    system_identifier: "THIS WILL BE OVERWRITTEN"
-  }
-  @update_attrs %{
-    confirmed_at: ~N[2023-04-01 09:07:00],
-    email: "some updated email",
-    email_verified: false,
-    last_name: "some updated last_name",
-    locale: "some updated locale",
-    name: "some updated name",
-    password_hash: "some updated password_hash",
-    picture: "some updated picture",
-    start_date: ~N[2023-04-01 09:07:00],
-    status: "some updated status",
-    system_identifier: "THIS WILL BE OVERWRITTEN, NOT ALLOWED TO UPDATE"
-  }
   @invalid_attrs %{
     confirmed_at: nil,
     email: nil,
@@ -65,23 +41,36 @@ defmodule AccountsManagementAPIWeb.AccountControllerTest do
 
   describe "create account" do
     test "renders account when data is valid", %{conn: conn} do
-      conn = post(conn, ~p"/api/accounts", account: @create_attrs)
+      body =
+        """
+        {
+          "account": {
+              "email": "jwick@gmail.com",
+              "password": "Cool!Password",
+              "name": "John",
+              "last_name": "Wick",
+              "locale": "es"
+          }
+        }
+        """
+        |> Jason.decode!()
+
+      conn = post(conn, ~p"/api/accounts", body)
       assert %{"id" => id} = json_response(conn, 201)["data"]
 
       conn = get(new_conn(), ~p"/api/accounts/#{id}")
 
       assert %{
                "id" => ^id,
-               "confirmed_at" => "2023-03-31T09:07:00",
-               "email" => "some email",
-               "email_verified" => true,
-               "last_name" => "some last_name",
-               "locale" => "some locale",
-               "name" => "some name",
-               "password_hash" => "some password_hash",
-               "picture" => "some picture",
-               "start_date" => "2023-03-31T09:07:00",
-               "status" => "some status",
+               "confirmed_at" => nil,
+               "email" => "jwick@gmail.com",
+               "email_verified" => false,
+               "last_name" => "Wick",
+               "locale" => "es",
+               "name" => "John",
+               "picture" => nil,
+               "start_date" => nil,
+               "status" => "pending",
                "system_identifier" => @system_identifier
              } = json_response(conn, 200)["data"]
     end
@@ -90,31 +79,103 @@ defmodule AccountsManagementAPIWeb.AccountControllerTest do
       conn = post(conn, ~p"/api/accounts", account: @invalid_attrs)
       assert json_response(conn, 422)["errors"] != %{}
     end
+
+    test "renders invalid email", %{conn: conn} do
+      body =
+        """
+        {
+          "account": {
+              "email": "jwick.com",
+              "password": "Cool!Password",
+              "name": "John",
+              "last_name": "Wick",
+              "locale": "es"
+          }
+        }
+        """
+        |> Jason.decode!()
+
+      conn = post(conn, ~p"/api/accounts", body)
+      assert %{"email" => ["is not valid"]} = json_response(conn, 422)["errors"]
+    end
+
+    test "renders invalid pass", %{conn: conn} do
+      body =
+        """
+        {
+          "account": {
+              "email": "jwick@gmail.com",
+              "password": "short",
+              "name": "John",
+              "last_name": "Wick",
+              "locale": "es"
+          }
+        }
+        """
+        |> Jason.decode!()
+
+      conn = post(conn, ~p"/api/accounts", body)
+
+      assert %{
+               "password" => [
+                 "at least one digit or punctuation character",
+                 "at least one upper case character",
+                 "should be at least 12 character(s)"
+               ]
+             } = json_response(conn, 422)["errors"]
+
+      body =
+        """
+        {
+          "account": {
+              "email": "jwick@gmail.com",
+              "password": "short123sss12312312",
+              "name": "John",
+              "last_name": "Wick",
+              "locale": "es"
+          }
+        }
+        """
+        |> Jason.decode!()
+
+      conn = post(conn, ~p"/api/accounts", body)
+
+      assert %{
+               "password" => [
+                 "at least one upper case character"
+               ]
+             } = json_response(conn, 422)["errors"]
+    end
   end
 
   describe "update account" do
     setup [:create_account]
 
     test "renders account when data is valid", %{conn: conn, account: %Account{id: id} = account} do
-      conn = put(conn, ~p"/api/accounts/#{account}", account: @update_attrs)
+      body =
+        """
+        {
+          "account": {
+              "email": "john_wick@gmail.com",
+              "locale": "en"
+          }
+        }
+        """
+        |> Jason.decode!()
+
+      conn = put(conn, ~p"/api/accounts/#{account}", body)
       assert %{"id" => ^id} = json_response(conn, 200)["data"]
 
       conn = get(new_conn(), ~p"/api/accounts/#{id}")
 
-      assert %{
-               "id" => ^id,
-               "confirmed_at" => "2023-04-01T09:07:00",
-               "email" => "some updated email",
-               "email_verified" => false,
-               "last_name" => "some updated last_name",
-               "locale" => "some updated locale",
-               "name" => "some updated name",
-               "password_hash" => "some updated password_hash",
-               "picture" => "some updated picture",
-               "start_date" => "2023-04-01T09:07:00",
-               "status" => "some updated status",
-               "system_identifier" => @system_identifier
-             } = json_response(conn, 200)["data"]
+      %{
+        "id" => ^id,
+        "email" => email,
+        "locale" => locale
+      } = json_response(conn, 200)["data"]
+
+      assert email == "john_wick@gmail.com"
+      assert locale == "en"
     end
 
     test "renders errors when data is invalid", %{conn: conn, account: account} do

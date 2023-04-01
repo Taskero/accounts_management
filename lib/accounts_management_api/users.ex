@@ -4,6 +4,8 @@ defmodule AccountsManagementAPI.Users do
   """
 
   import Ecto.Query, warn: false
+
+  alias Ecto.Changeset
   alias AccountsManagementAPI.Repo
 
   alias AccountsManagementAPI.Users.Account
@@ -13,8 +15,8 @@ defmodule AccountsManagementAPI.Users do
 
       ## Examples
 
-      iex>  [system_identifier: :my_app] |> list_accounts()
-      [%Account{}, ...]
+      iex>  [system_identifier: :my_app] |> AccountsManagementAPI.Users.list_accounts()
+      [%AccountsManagementAPI.Users.Account{}]
 
   """
   def list_accounts(system_identifier: nil), do: []
@@ -80,6 +82,8 @@ defmodule AccountsManagementAPI.Users do
 
   """
   def create_account(attrs \\ %{}) do
+    attrs = Map.put(attrs, "status", "pending")
+
     %Account{}
     |> Account.changeset(attrs)
     |> Repo.insert()
@@ -90,11 +94,11 @@ defmodule AccountsManagementAPI.Users do
 
   ## Examples
 
-      iex> update_account(account, %{field: new_value})
-      {:ok, %Account{}}
+  iex> update_account(account, %{field: new_value})
+  {:ok, %Account{}}
 
-      iex> update_account(account, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
+  iex> update_account(account, %{field: bad_value})
+  {:error, %Ecto.Changeset{}}
 
   """
   def update_account(%Account{} = account, attrs) do

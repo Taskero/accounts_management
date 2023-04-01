@@ -40,6 +40,8 @@ defmodule AccountsManagementAPIWeb.AccountController do
   def update(conn, %{"id" => id, "account" => account_params}) do
     with sysid <- conn |> get_req_header("system-identifier") |> List.first(),
          account_params <- account_params |> Map.delete("system_identifier"),
+         account_params <- account_params |> Map.delete("status"),
+         account_params <- account_params |> Map.delete("confirmed_at"),
          {:ok, account} <- Users.get_account(id, sysid),
          {:ok, %Account{} = account} <- Users.update_account(account, account_params) do
       render(conn, :show, account: account)
