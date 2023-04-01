@@ -1,0 +1,19 @@
+version: "3.8"
+
+services:
+  localdb:
+    image: postgres:latest
+    environment:
+      PGHOST: localhost
+      PGPORT: "5432"
+      PGDATABASE: postgres
+      PGUSER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./postgres:/var/lib/postgresql/data
+
+# volumes:
+#   redis_data:
+#     driver: local

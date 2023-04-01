@@ -2,7 +2,9 @@ defmodule AccountsManagementAPIWeb.ErrorJSONTest do
   use AccountsManagementAPIWeb.ConnCase, async: true
 
   test "renders 404" do
-    assert AccountsManagementAPIWeb.ErrorJSON.render("404.json", %{}) == %{errors: %{detail: "Not Found"}}
+    assert AccountsManagementAPIWeb.ErrorJSON.render("404.json", %{}) == %{
+             errors: %{detail: "Not Found"}
+           }
   end
 
   test "renders 500" do
