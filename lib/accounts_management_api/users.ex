@@ -9,33 +9,63 @@ defmodule AccountsManagementAPI.Users do
   alias AccountsManagementAPI.Users.Account
 
   @doc """
-  Returns the list of accounts.
+  `system_identifier` Is required to any query
 
-  ## Examples
+      ## Examples
 
-      iex> list_accounts()
+      iex>  [system_identifier: :my_app] |> list_accounts()
       [%Account{}, ...]
 
   """
-  def list_accounts do
-    Repo.all(Account)
+  def list_accounts(system_identifier: nil), do: []
+  def list_accounts([{:system_identifier, nil} | _]), do: []
+
+  def list_accounts(system_identifier: system) do
+    Account
+    |> filter_query(system_identifier: system)
+    |> Repo.all()
+  end
+
+  def list_accounts([{:system_identifier, system} | filters]) do
+    query =
+      Account
+      |> filter_query(system_identifier: system)
+
+    filters
+    |> Enum.reduce(query, fn filter, query ->
+      query |> filter_query([filter])
+    end)
+    |> Repo.all()
+  end
+
+  defp filter_query(query, system_identifier: system) do
+    query |> where([a], a.system_identifier == ^system)
+  end
+
+  defp filter_query(query, id: id) do
+    query |> where([a], a.id == ^id)
   end
 
   @doc """
   Gets a single account.
 
-  Raises `Ecto.NoResultsError` if the Account does not exist.
-
   ## Examples
 
-      iex> get_account!(123)
-      %Account{}
+      iex> get_account("ebfbb184-06f6-4819-812a-3e242bdb42d3", "my_app")
+      {:ok, %Account{}}
 
-      iex> get_account!(456)
-      ** (Ecto.NoResultsError)
+      iex> get_account("9b65193c-2293-4809-9d34-06a12ba3ddcf", "my_app")
+      {:error, :not_found}
 
   """
-  def get_account!(id), do: Repo.get!(Account, id)
+  def get_account(id, system) do
+    case [system_identifier: system, id: id]
+         |> list_accounts()
+         |> List.first() do
+      nil -> {:error, :not_found}
+      result -> {:ok, result}
+    end
+  end
 
   @doc """
   Creates a account.

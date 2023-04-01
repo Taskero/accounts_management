@@ -5,6 +5,8 @@ defmodule AccountsManagementAPIWeb.AccountControllerTest do
 
   alias AccountsManagementAPI.Users.Account
 
+  @system_identifier "my_cool_system"
+
   @create_attrs %{
     confirmed_at: ~N[2023-03-31 09:07:00],
     email: "some email",
@@ -16,7 +18,7 @@ defmodule AccountsManagementAPIWeb.AccountControllerTest do
     picture: "some picture",
     start_date: ~N[2023-03-31 09:07:00],
     status: "some status",
-    system_identifier: "some system_identifier"
+    system_identifier: "THIS WILL BE OVERWRITTEN"
   }
   @update_attrs %{
     confirmed_at: ~N[2023-04-01 09:07:00],
@@ -29,7 +31,7 @@ defmodule AccountsManagementAPIWeb.AccountControllerTest do
     picture: "some updated picture",
     start_date: ~N[2023-04-01 09:07:00],
     status: "some updated status",
-    system_identifier: "some updated system_identifier"
+    system_identifier: "THIS WILL BE OVERWRITTEN, NOT ALLOWED TO UPDATE"
   }
   @invalid_attrs %{
     confirmed_at: nil,
@@ -46,7 +48,12 @@ defmodule AccountsManagementAPIWeb.AccountControllerTest do
   }
 
   setup %{conn: conn} do
-    {:ok, conn: put_req_header(conn, "accept", "application/json")}
+    conn =
+      conn
+      |> put_req_header("accept", "application/json")
+      |> put_req_header("system-identifier", @system_identifier)
+
+    {:ok, conn: conn}
   end
 
   describe "index" do
@@ -61,7 +68,7 @@ defmodule AccountsManagementAPIWeb.AccountControllerTest do
       conn = post(conn, ~p"/api/accounts", account: @create_attrs)
       assert %{"id" => id} = json_response(conn, 201)["data"]
 
-      conn = get(conn, ~p"/api/accounts/#{id}")
+      conn = get(new_conn(), ~p"/api/accounts/#{id}")
 
       assert %{
                "id" => ^id,
@@ -75,7 +82,7 @@ defmodule AccountsManagementAPIWeb.AccountControllerTest do
                "picture" => "some picture",
                "start_date" => "2023-03-31T09:07:00",
                "status" => "some status",
-               "system_identifier" => "some system_identifier"
+               "system_identifier" => @system_identifier
              } = json_response(conn, 200)["data"]
     end
 
@@ -92,7 +99,7 @@ defmodule AccountsManagementAPIWeb.AccountControllerTest do
       conn = put(conn, ~p"/api/accounts/#{account}", account: @update_attrs)
       assert %{"id" => ^id} = json_response(conn, 200)["data"]
 
-      conn = get(conn, ~p"/api/accounts/#{id}")
+      conn = get(new_conn(), ~p"/api/accounts/#{id}")
 
       assert %{
                "id" => ^id,
@@ -106,7 +113,7 @@ defmodule AccountsManagementAPIWeb.AccountControllerTest do
                "picture" => "some updated picture",
                "start_date" => "2023-04-01T09:07:00",
                "status" => "some updated status",
-               "system_identifier" => "some updated system_identifier"
+               "system_identifier" => @system_identifier
              } = json_response(conn, 200)["data"]
     end
 
@@ -123,14 +130,19 @@ defmodule AccountsManagementAPIWeb.AccountControllerTest do
       conn = delete(conn, ~p"/api/accounts/#{account}")
       assert response(conn, 204)
 
-      assert_error_sent 404, fn ->
-        get(conn, ~p"/api/accounts/#{account}")
-      end
+      conn = get(new_conn(), ~p"/api/accounts/#{account}")
+
+      assert response(conn, 404)
     end
   end
 
   defp create_account(_) do
-    account = insert(:account)
+    account = insert(:account, system_identifier: @system_identifier)
+
     %{account: account}
+  end
+
+  defp new_conn() do
+    build_conn() |> put_req_header("system-identifier", @system_identifier)
   end
 end
