@@ -1,7 +1,7 @@
 defmodule AccountsManagementAPIWeb.AccountControllerTest do
   use AccountsManagementAPIWeb.ConnCase
 
-  import AccountsManagementAPI.UsersFixtures
+  import AccountsManagementAPI.Test.Factories
 
   alias AccountsManagementAPI.Users.Account
 
@@ -130,7 +130,7 @@ defmodule AccountsManagementAPIWeb.AccountControllerTest do
   end
 
   defp create_account(_) do
-    account = account_fixture()
+    account = insert(:account)
     %{account: account}
   end
 end

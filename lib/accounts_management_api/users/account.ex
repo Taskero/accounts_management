@@ -13,6 +13,7 @@ defmodule AccountsManagementAPI.Users.Account do
     field :last_name, :string
     field :locale, :string
     field :name, :string
+    field :password, :string, virtual: true
     field :password_hash, :string
     field :picture, :string
     field :start_date, :naive_datetime

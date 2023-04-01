@@ -6,7 +6,7 @@ defmodule AccountsManagementAPI.UsersTest do
   describe "accounts" do
     alias AccountsManagementAPI.Users.Account
 
-    import AccountsManagementAPI.UsersFixtures
+    import AccountsManagementAPI.Test.Factories
 
     @invalid_attrs %{
       confirmed_at: nil,
@@ -23,13 +23,13 @@ defmodule AccountsManagementAPI.UsersTest do
     }
 
     test "list_accounts/0 returns all accounts" do
-      account = account_fixture()
-      assert Users.list_accounts() == [account]
+      account = insert(:account)
+      assert Users.list_accounts() == [%{account | password: nil}]
     end
 
     test "get_account!/1 returns the account with given id" do
-      account = account_fixture()
-      assert Users.get_account!(account.id) == account
+      account = insert(:account)
+      assert Users.get_account!(account.id) == %{account | password: nil}
     end
 
     test "create_account/1 with valid data creates a account" do
@@ -66,7 +66,7 @@ defmodule AccountsManagementAPI.UsersTest do
     end
 
     test "update_account/2 with valid data updates the account" do
-      account = account_fixture()
+      account = insert(:account)
 
       update_attrs = %{
         confirmed_at: ~N[2023-04-01 09:07:00],
@@ -97,19 +97,19 @@ defmodule AccountsManagementAPI.UsersTest do
     end
 
     test "update_account/2 with invalid data returns error changeset" do
-      account = account_fixture()
+      account = insert(:account)
       assert {:error, %Ecto.Changeset{}} = Users.update_account(account, @invalid_attrs)
-      assert account == Users.get_account!(account.id)
+      assert %{account | password: nil} == Users.get_account!(account.id)
     end
 
     test "delete_account/1 deletes the account" do
-      account = account_fixture()
+      account = insert(:account)
       assert {:ok, %Account{}} = Users.delete_account(account)
       assert_raise Ecto.NoResultsError, fn -> Users.get_account!(account.id) end
     end
 
     test "change_account/1 returns a account changeset" do
-      account = account_fixture()
+      account = insert(:account)
       assert %Ecto.Changeset{} = Users.change_account(account)
     end
   end
