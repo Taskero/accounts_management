@@ -55,6 +55,9 @@ jobs:
       - name: Run tests
         run: mix coveralls.json
         env:
+          DB_USERNAME: postgres
+          DB_PASSWORD: postgres
+          DB_HOSTNAME: db_test
           MIX_ENV: test
       - name: Upload to Codecov
         run: |
