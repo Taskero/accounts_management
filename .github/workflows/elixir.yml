@@ -22,7 +22,7 @@ jobs:
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: db_test
+          POSTGRES_DB: accounts_management_api_test
         image: postgres:12
         ports: ["5432:5432"]
         options: >-
@@ -53,7 +53,7 @@ jobs:
         env:
           DB_USERNAME: postgres
           DB_PASSWORD: postgres
-          DB_HOSTNAME: db_test
+          DB_HOSTNAME: localhost
       - name: Check Formatting
         run: mix format --check-formatted
       - name: Run tests
@@ -61,7 +61,7 @@ jobs:
         env:
           DB_USERNAME: postgres
           DB_PASSWORD: postgres
-          DB_HOSTNAME: db_test
+          DB_HOSTNAME: localhost
           MIX_ENV: test
       - name: Upload to Codecov
         run: |
