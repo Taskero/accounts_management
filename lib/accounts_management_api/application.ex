@@ -11,7 +11,7 @@ defmodule AccountsManagementAPI.Application do
       # Start the Telemetry supervisor
       AccountsManagementAPIWeb.Telemetry,
       # Start the Ecto repository
-      {AccountsManagementAPI.Repo, [show_sensitive_data_on_connection_error: true]},
+      AccountsManagementAPI.Repo,
       # Start the PubSub system
       {Phoenix.PubSub, name: AccountsManagementAPI.PubSub},
       # Start the Endpoint (http/https)
