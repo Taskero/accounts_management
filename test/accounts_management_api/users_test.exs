@@ -32,7 +32,7 @@ defmodule AccountsManagementAPI.UsersTest do
     test "get_account!/1 returns the account with given id" do
       account = insert(:account, system_identifier: @system_identifier)
 
-      assert Users.get_account(account.id, @system_identifier) ==
+      assert Users.get_account(@system_identifier, account.id) ==
                {:ok, %{account | password: nil}}
     end
 
@@ -103,13 +103,13 @@ defmodule AccountsManagementAPI.UsersTest do
       assert {:error, %Ecto.Changeset{}} = Users.update_account(account, @invalid_attrs)
 
       assert {:ok, %{account | password: nil}} ==
-               Users.get_account(account.id, @system_identifier)
+               Users.get_account(@system_identifier, account.id)
     end
 
     test "delete_account/1 deletes the account" do
       account = insert(:account, system_identifier: @system_identifier)
       assert {:ok, %Account{}} = Users.delete_account(account)
-      assert Users.get_account(account.id, @system_identifier) == {:error, :not_found}
+      assert Users.get_account(@system_identifier, account.id) == {:error, :not_found}
     end
 
     test "change_account/1 returns a account changeset" do

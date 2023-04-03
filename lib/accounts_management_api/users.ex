@@ -5,7 +5,6 @@ defmodule AccountsManagementAPI.Users do
 
   import Ecto.Query, warn: false
 
-  alias Ecto.Changeset
   alias AccountsManagementAPI.Repo
 
   alias AccountsManagementAPI.Users.Account
@@ -53,14 +52,14 @@ defmodule AccountsManagementAPI.Users do
 
   ## Examples
 
-      iex> get_account("ebfbb184-06f6-4819-812a-3e242bdb42d3", "my_app")
+      iex> get_account("my_app", "ebfbb184-06f6-4819-812a-3e242bdb42d3")
       {:ok, %Account{}}
 
-      iex> get_account("9b65193c-2293-4809-9d34-06a12ba3ddcf", "my_app")
+      iex> get_account("my_app", "9b65193c-2293-4809-9d34-06a12ba3ddcf")
       {:error, :not_found}
 
   """
-  def get_account(id, system) do
+  def get_account(system, id) do
     case [system_identifier: system, id: id]
          |> list_accounts()
          |> List.first() do

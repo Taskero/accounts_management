@@ -38,7 +38,9 @@ defmodule AccountsManagementAPI.Users.Account do
     |> hash_password()
     |> validate_required(@required)
     |> validate_email_format()
-    |> unique_constraint([:email, :system_identifier], name: :accounts_email_system_identifier_key)
+    |> unique_constraint([:email, :system_identifier],
+      name: :accounts_email_system_identifier_index
+    )
   end
 
   defp hash_password(%{valid?: true, changes: %{password: password}} = changeset) do

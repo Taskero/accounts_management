@@ -32,7 +32,7 @@ defmodule AccountsManagementAPIWeb.AccountController do
   def show(conn, %{"id" => id}) do
     sysid = conn |> get_req_header("system-identifier") |> List.first()
 
-    with {:ok, %Account{} = account} <- Users.get_account(id, sysid) do
+    with {:ok, %Account{} = account} <- Users.get_account(sysid, id) do
       render(conn, :show, account: account)
     end
   end
@@ -42,7 +42,7 @@ defmodule AccountsManagementAPIWeb.AccountController do
          account_params <- account_params |> Map.delete("system_identifier"),
          account_params <- account_params |> Map.delete("status"),
          account_params <- account_params |> Map.delete("confirmed_at"),
-         {:ok, account} <- Users.get_account(id, sysid),
+         {:ok, account} <- Users.get_account(sysid, id),
          {:ok, %Account{} = account} <- Users.update_account(account, account_params) do
       render(conn, :show, account: account)
     end
@@ -50,7 +50,7 @@ defmodule AccountsManagementAPIWeb.AccountController do
 
   def delete(conn, %{"id" => id}) do
     with sysid <- conn |> get_req_header("system-identifier") |> List.first(),
-         {:ok, account} <- Users.get_account(id, sysid),
+         {:ok, account} <- Users.get_account(sysid, id),
          {:ok, %Account{}} <- Users.delete_account(account) do
       send_resp(conn, :no_content, "")
     end

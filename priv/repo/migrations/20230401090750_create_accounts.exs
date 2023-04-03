@@ -19,6 +19,6 @@ defmodule AccountsManagementAPI.Repo.Migrations.CreateAccounts do
       timestamps()
     end
 
-    unique_constraint(:accounts, [:email, :system_identifier])
+    create unique_index(:accounts, [:email, :system_identifier])
   end
 end
