@@ -9,3 +9,9 @@ erl_crash.dump
 /config/*.secret.exs
 .elixir_ls/
 labels_dets
+
+# Elastic Beanstalk Files
+.elasticbeanstalk/*
+!.elasticbeanstalk/*.cfg.yml
+!.elasticbeanstalk/*.global.yml
+scripts/deployment/.docker.prod.env
