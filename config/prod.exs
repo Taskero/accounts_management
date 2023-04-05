@@ -18,20 +18,24 @@ import Config
 # Do not print debug messages in production
 config :logger, level: :info
 
-config :project_name, AccountsManagementAPIWeb.Endpoint,
+config :accounts_management_api, AccountsManagementAPIWeb.Endpoint,
   http: [port: {:system, "PORT"}, compress: true],
   url: [scheme: "http", host: System.get_env("HOST"), port: {:system, "PORT"}],
   secret_key_base: System.get_env("SECRET_KEY_BASE"),
   code_reloader: false,
-  cache_static_manifest: "priv/static/manifest.json",
-  server: true
+  cache_static_manifest: "priv/static/cache_manifest.json",
+  server: true,
+  load_from_system_env: true,
+  check_origin: false,
+  root: "."
 
-config :project_name, AccountsManagementAPIWeb.Repo,
+config :accounts_management_api, AccountsManagementAPI.Repo,
   adapter: Ecto.Adapters.Postgres,
-  database: System.get_env("RDS_DB_NAME"),
-  username: System.get_env("RDS_USERNAME"),
-  password: System.get_env("RDS_PASSWORD"),
-  hostname: System.get_env("RDS_HOSTNAME"),
-  port: System.get_env("RDS_PORT") || 5432,
-  pool_size: 20,
-  ssl: true
+  database: System.get_env("PROD_DB_NAME"),
+  username: System.get_env("PROD_DB_USERNAME"),
+  password: System.get_env("PROD_DB_PASSWORD"),
+  hostname: System.get_env("PROD_DB_HOSTNAME"),
+  port: System.get_env("PROD_DB_PORT") || 5432,
+  pool_size: 20
+
+# ssl: true
