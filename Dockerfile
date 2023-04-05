@@ -1,101 +1,61 @@
-# syntax = docker/dockerfile:1
-ARG MIX_ENV="prod"
+FROM elixir:alpine AS builder
 
-FROM hexpm/elixir:1.14.2-erlang-25.2-debian-bullseye-20221004-slim as build
+ARG phoenix_subdir=.
+ARG build_env=prod
+ARG app_name
 
-# install build dependencies
-RUN --mount=type=cache,target=/var/lib/apt,sharing=locked \
-  --mount=type=cache,target=/var/cache/apt,sharing=locked \
-  apt-get update && \
-  apt-get upgrade -y && \
-  apt-get install -y build-essential git curl npm cargo
+ENV MIX_ENV=${build_env} TERM=xterm
 
-# prepare build dir
-WORKDIR /app
+WORKDIR /opt/app
 
-# install hex + rebar
-RUN --mount=type=cache,target=~/.cache/rebar3 \
-  mix do \
-  local.hex --force,\
-  local.rebar --force
+# not applicable for this project
+# RUN apk update \
+#   && apk --no-cache --update add nodejs nodejs-npm
 
-# set build ENV
-ARG MIX_ENV
-ENV MIX_ENV="${MIX_ENV}"
+RUN mix local.rebar --force \
+  && mix local.hex --force
 
-# install mix dependencies
-COPY mix.exs mix.lock ./
-RUN --mount=type=cache,target=~/.hex/packages/hexpm \
-  mix deps.get --only $MIX_ENV
-RUN mkdir config
+COPY . .
+RUN mix do deps.get, compile
 
-# copy compile-time config files before we compile dependencies
-# to ensure any relevant config change will trigger the dependencies
-# to be re-compiled.
-COPY config/config.exs config/$MIX_ENV.exs config/
-RUN mix deps.compile
+# not applicable for this project
+# RUN cd ${phoenix_subdir}/assets \
+#   && npm install \
+#   && ./node_modules/webpack/bin/webpack.js --mode production \
+#   && cd .. \
+#   && mix phx.digest
 
-COPY priv priv
-# COPY assets assets
-COPY lib lib
-# RUN --mount=type=cache,target=/root/.npm npm --prefix assets ci
-# compile and build the release
-RUN mix compile
-# RUN mix assets.deploy
+RUN mix phx.digest
+RUN mix release ${app_name}
+RUN mv _build/${build_env}/rel/${app_name} /opt/release
+RUN mv /opt/release/bin/${app_name} /opt/release/bin/start_server
 
-# changes to config/runtime.exs don't require recompiling the code
-COPY config/runtime.exs config/
-# COPY rel rel
-# COPY cfg_files cfg_files
-RUN mix release
+FROM alpine:latest
 
-# start a new build stage so that the final image will only contain
-# the compiled release and other runtime necessities
-FROM hexpm/elixir:1.14.2-erlang-25.2-debian-bullseye-20221004-slim as app
-RUN --mount=type=cache,target=/var/lib/apt,sharing=locked \
-  --mount=type=cache,target=/var/cache/apt,sharing=locked \
-  apt-get update && \
-  apt-get upgrade -y && \
-  apt-get install -y openssl libncurses6 ca-certificates
-RUN update-ca-certificates
+RUN apk update \
+  && apk --no-cache --update add\
+  bash \
+  ca-certificates \
+  libgcc \
+  libstdc++ \
+  ncurses-libs \
+  openssl \
+  openssl-dev
 
-ARG MIX_ENV
-ENV USER="elixir"
+RUN apk upgrade --no-cache && apk add --no-cache
 
-WORKDIR "/home/${USER}/app"
-# Creates an unprivileged user to be used exclusively to run the Phoenix app
-RUN \
-  addgroup \
-  --gid 1000 \
-  "${USER}" \
-  && adduser \
-  --shell /bin/sh \
-  --uid 1000 \
-  --ingroup "${USER}" \
-  --home "/home/${USER}" \
-  "${USER}" \
-  && su "${USER}"
+EXPOSE ${PORT}
 
-# Everything from this line onwards will run in the context of the unprivileged user.
-USER "${USER}"
+WORKDIR /opt/app
+COPY --from=builder /opt/release .
 
-COPY scripts/entrypoint.sh ./
-# COPY cfg_files ./cfg_files
-COPY --from=build --chown="${USER}":"${USER}" /app/_build/"${MIX_ENV}"/rel/accounts_management_api ./
-
-ENTRYPOINT ["./entrypoint.sh"]
-# Expose web (8080) and SMTP-with-STARTTLS (1587)
-ENV PORT=8080
-EXPOSE 8080
-EXPOSE 1587
+CMD exec /opt/app/bin/start_server start
 
 # Usage:
-# build: docker image build -t accounts_management_api-web .
-# shell: docker container run --rm -it --entrypoint "" -p 127.0.0.1:8080:8080  --env-file ./.docker.env accounts_management_api-web sh
-# run:   docker container run --rm -it -p 127.0.0.1:8080:8080 --name accounts_management_api --env-file ./.docker.env accounts_management_api-web
-# exec:  docker container exec -it accounts_management_api sh
-# logs:  docker container logs --follow --tail 100 accounts_management_api
+# build: docker image build -t $APP_NAME-web . --no-cache --build-arg app_name=$APP_NAME
+# shell: docker container run --rm -it -p 127.0.0.1:8080:8080 --env-file scripts/deployment/.docker.prod.env $APP_NAME sh
+# run:   docker container run --rm -it -p 127.0.0.1:8080:8080 --env-file scripts/deployment/.docker.prod.env $APP_NAME-web
+# id:    ID=$(docker ps | grep $APP_NAME | awk '{print $1}')
+# exec:  docker exec -it $ID bash
+# logs:  docker container logs --follow --tail 100 $ID
 # comp:  docker-compose up
-
-# http://localhost:8080/api/accounts
-CMD ["start"]

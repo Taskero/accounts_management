@@ -1,12 +1,12 @@
-/deps
+.git
+.gitignore
 /_build
-ecl_Crash.dump
+/assets/node_modules/
+/deps
+/doc/
 /node_modules
-/priv/static/*
+/priv/static/
+/test/
+/tmp/
 /uploads/files/*
-.git
-.gitignore
-# Elastic Beanstalk Files
-.elasticbeanstalk/*
-.git
-.gitignore
+ecl_Crash.dump
