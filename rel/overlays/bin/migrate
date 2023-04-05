@@ -1,0 +1,3 @@
+#!/bin/sh
+cd -P -- "$(dirname -- "$0")"
+exec ./accounts_management_api eval AccountsManagementAPI.Release.migrate

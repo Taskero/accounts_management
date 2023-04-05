@@ -1,61 +1,89 @@
-FROM elixir:alpine AS builder
+ARG ELIXIR_VERSION=1.14.3
+ARG OTP_VERSION=25.3
+ARG DEBIAN_VERSION=bullseye-20230227-slim
 
-ARG phoenix_subdir=.
-ARG build_env=prod
-ARG app_name
+ARG BUILDER_IMAGE="hexpm/elixir:${ELIXIR_VERSION}-erlang-${OTP_VERSION}-debian-${DEBIAN_VERSION}"
+ARG RUNNER_IMAGE="debian:${DEBIAN_VERSION}"
 
-ENV MIX_ENV=${build_env} TERM=xterm
+FROM ${BUILDER_IMAGE} as builder
 
-WORKDIR /opt/app
+# install build dependencies
+RUN apt-get update -y && apt-get install -y build-essential git \
+  && apt-get clean && rm -f /var/lib/apt/lists/*_*
 
-# not applicable for this project
-# RUN apk update \
-#   && apk --no-cache --update add nodejs nodejs-npm
+# prepare build dir
+WORKDIR /app
 
-RUN mix local.rebar --force \
-  && mix local.hex --force
+# install hex + rebar
+RUN mix local.hex --force && \
+  mix local.rebar --force
 
-COPY . .
-RUN mix do deps.get, compile
+# set build ENV
+ENV MIX_ENV="prod"
 
-# not applicable for this project
-# RUN cd ${phoenix_subdir}/assets \
-#   && npm install \
-#   && ./node_modules/webpack/bin/webpack.js --mode production \
-#   && cd .. \
-#   && mix phx.digest
+# install mix dependencies
+COPY mix.exs mix.lock ./
+RUN mix deps.get --only $MIX_ENV
+RUN mkdir config
 
-RUN mix phx.digest
-RUN mix release ${app_name}
-RUN mv _build/${build_env}/rel/${app_name} /opt/release
-RUN mv /opt/release/bin/${app_name} /opt/release/bin/start_server
+# copy compile-time config files before we compile dependencies
+# to ensure any relevant config change will trigger the dependencies
+# to be re-compiled.
+COPY config/config.exs config/${MIX_ENV}.exs config/
+RUN mix deps.compile
 
-FROM alpine:latest
+COPY priv priv
 
-RUN apk update \
-  && apk --no-cache --update add\
-  bash \
-  ca-certificates \
-  libgcc \
-  libstdc++ \
-  ncurses-libs \
-  openssl \
-  openssl-dev
+COPY lib lib
 
-RUN apk upgrade --no-cache && apk add --no-cache
+# Compile the release
+RUN mix compile
 
-EXPOSE ${PORT}
+# Changes to config/runtime.exs don't require recompiling the code
+COPY config/runtime.exs config/
 
-WORKDIR /opt/app
-COPY --from=builder /opt/release .
+COPY rel rel
 
-CMD exec /opt/app/bin/start_server start
+COPY scripts/entrypoint.sh entrypoint.sh
+
+RUN mix release
+
+# start a new build stage so that the final image will only contain
+# the compiled release and other runtime necessities
+FROM ${RUNNER_IMAGE}
+
+RUN apt-get update -y && apt-get install -y libstdc++6 openssl libncurses5 locales \
+  && apt-get clean && rm -f /var/lib/apt/lists/*_*
+
+# Set the locale
+RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
+
+ENV LANG en_US.UTF-8
+ENV LANGUAGE en_US:en
+ENV LC_ALL en_US.UTF-8
+
+WORKDIR "/app"
+RUN chown nobody /app
+
+# set runner ENV
+ENV MIX_ENV="prod"
+
+# Only copy the final release from the build stage
+COPY --from=builder --chown=nobody:root /app/_build/${MIX_ENV}/rel/accounts_management_api ./
+COPY --from=builder --chown=nobody:root /app/entrypoint.sh ./
+
+USER nobody
+
+CMD ["./entrypoint.sh"]
+
+
 
 # Usage:
 # build: docker image build -t $APP_NAME-web . --no-cache --build-arg app_name=$APP_NAME
-# shell: docker container run --rm -it -p 127.0.0.1:8080:8080 --env-file scripts/deployment/.docker.prod.env $APP_NAME sh
 # run:   docker container run --rm -it -p 127.0.0.1:8080:8080 --env-file scripts/deployment/.docker.prod.env $APP_NAME-web
 # id:    ID=$(docker ps | grep $APP_NAME | awk '{print $1}')
 # exec:  docker exec -it $ID bash
 # logs:  docker container logs --follow --tail 100 $ID
 # comp:  docker-compose up
+
+# shell: docker container run --rm -it -p 127.0.0.1:8080:8080 --env-file scripts/deployment/.docker.prod.env $APP_NAME sh

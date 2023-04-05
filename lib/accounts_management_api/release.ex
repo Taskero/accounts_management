@@ -1,6 +1,8 @@
 defmodule AccountsManagementAPI.Release do
-  @moduledoc false
-
+  @moduledoc """
+  Used for executing DB release tasks when run in production without Mix
+  installed.
+  """
   @app :accounts_management_api
 
   def migrate do

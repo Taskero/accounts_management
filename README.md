@@ -146,6 +146,9 @@ mix phx.digest
  ~/code/tools/cloud-sql-proxy  taskero-382720:us-central1:mb-apps-db
 PORT=$GCLOUD_PORT _build/prod/rel/accounts_management_api/bin/accounts_management_api start
 # http://localhost:8080/api/accounts
+
+cd scripts/deployment
+gcloud run deploy taskero --source .
 ```
 
 
