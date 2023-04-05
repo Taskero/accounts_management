@@ -86,4 +86,6 @@ CMD ["./entrypoint.sh"]
 # logs:  docker container logs --follow --tail 100 $ID
 # comp:  docker-compose up
 
-# shell: docker container run --rm -it -p 127.0.0.1:8080:8080 --env-file scripts/deployment/.docker.prod.env $APP_NAME sh
+# Appended by flyctl
+ENV ECTO_IPV6 true
+ENV ERL_AFLAGS "-proto_dist inet6_tcp"
