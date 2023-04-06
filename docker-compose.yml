@@ -1,19 +1,14 @@
 version: "3.8"
 
 services:
-  localdb:
-    image: postgres:latest
-    environment:
-      PGHOST: localhost
-      PGPORT: "5432"
-      PGDATABASE: postgres
-      PGUSER: postgres
-      POSTGRES_PASSWORD: postgres
+  web:
+    container_name: accounts_management_api
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    env_file:
+      - scripts/deployment/.docker.prod.env
     ports:
-      - "5432:5432"
+      - "8080:8080"
     volumes:
-      - ./postgres:/var/lib/postgresql/data
-
-# volumes:
-#   redis_data:
-#     driver: local
+      - .:/code

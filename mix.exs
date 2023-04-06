@@ -16,6 +16,19 @@ defmodule AccountsManagementAPI.MixProject do
         "coveralls.detail": :test,
         "coveralls.post": :test,
         "coveralls.html": :test
+      ],
+      releases: [
+        accounts_management_api: [
+          include_erts: true,
+          include_executables_for: [:unix],
+          applications: [
+            runtime_tools: :permanent
+          ],
+          env: %{
+            MIX_ENV: "prod",
+            PORT: "4000"
+          }
+        ]
       ]
     ]
   end
