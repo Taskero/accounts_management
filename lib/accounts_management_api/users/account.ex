@@ -7,7 +7,7 @@ defmodule AccountsManagementAPI.Users.Account do
   import Ecto.Query, only: [from: 2]
 
   alias AccountsManagementAPI.Repo
-  alias AccountsManagementAPI.Users.Address
+  alias AccountsManagementAPI.Users.{Address, Phone}
   alias Encryption.Hashing
 
   @primary_key {:id, :binary_id, autogenerate: true}
@@ -26,7 +26,8 @@ defmodule AccountsManagementAPI.Users.Account do
     field(:status, :string)
     field(:system_identifier, :string)
 
-    has_many(:addresses, AccountsManagementAPI.Users.Address, on_delete: :delete_all)
+    has_many(:addresses, Address, on_delete: :delete_all)
+    has_many(:phones, Phone, on_delete: :delete_all)
 
     timestamps()
   end

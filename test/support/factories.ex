@@ -37,4 +37,15 @@ defmodule AccountsManagementAPI.Test.Factories do
       account: build(:account)
     }
   end
+
+  def phone_factory do
+    %AccountsManagementAPI.Users.Phone{
+      type: "personal",
+      name: Faker.Internet.slug(),
+      number: Faker.Phone.EnUs.phone(),
+      default: true,
+      verified: false,
+      account: build(:account)
+    }
+  end
 end

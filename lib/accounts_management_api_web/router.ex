@@ -2,14 +2,15 @@ defmodule AccountsManagementAPIWeb.Router do
   use AccountsManagementAPIWeb, :router
 
   pipeline :api do
-    plug :accepts, ["json"]
+    plug(:accepts, ["json"])
   end
 
   scope "/api", AccountsManagementAPIWeb do
-    pipe_through :api
+    pipe_through(:api)
 
     resources "/accounts", AccountController, only: [:index, :create, :show, :update, :delete] do
-      resources "/addresses", AddressController, only: [:index, :create, :show, :update, :delete]
+      resources("/addresses", AddressController, only: [:index, :create, :show, :update, :delete])
+      resources("/phones", PhoneController, only: [:index, :create, :show, :update, :delete])
     end
   end
 
@@ -23,9 +24,9 @@ defmodule AccountsManagementAPIWeb.Router do
     import Phoenix.LiveDashboard.Router
 
     scope "/dev" do
-      pipe_through [:fetch_session, :protect_from_forgery]
+      pipe_through([:fetch_session, :protect_from_forgery])
 
-      live_dashboard "/dashboard", metrics: AccountsManagementAPIWeb.Telemetry
+      live_dashboard("/dashboard", metrics: AccountsManagementAPIWeb.Telemetry)
     end
   end
 end

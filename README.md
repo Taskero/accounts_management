@@ -7,7 +7,7 @@ Manage users accounts, services access SaaS
 ```mermaid
 erDiagram
 
-    account {
+    accounts {
         uuid id
         character_varying email
         character_varying password_hash
@@ -22,7 +22,7 @@ erDiagram
         character_varying system_identifier
     }
 
-    address {
+    addresses {
         uuid id
         uuid account_id
         character_varying type
@@ -36,7 +36,18 @@ erDiagram
         bool default
     }
 
-    account ||--|{ address : has
+    phones {
+        uuid id
+        uuid account_id
+        character_varying type
+        character_varying name
+        character_varying number
+        bool default
+        bool verified
+    }
+
+    accounts ||--|{ addresses : has
+    accounts ||--|{ phones : has
 
 ```
 

@@ -6,7 +6,7 @@ defmodule AccountsManagementAPI.Users do
   import Ecto.Query
 
   alias AccountsManagementAPI.Repo
-  alias AccountsManagementAPI.Users.{Account, Address}
+  alias AccountsManagementAPI.Users.{Account, Address, Phone}
 
   ########### Accounts ###########
 
@@ -25,8 +25,9 @@ defmodule AccountsManagementAPI.Users do
   def list_accounts(system_identifier: system) do
     from(a in Account,
       left_join: adr in assoc(a, :addresses),
+      left_join: p in assoc(a, :phones),
       where: a.system_identifier == ^system,
-      preload: [:addresses]
+      preload: [:addresses, :phones]
     )
     |> Repo.all()
   end
@@ -35,8 +36,9 @@ defmodule AccountsManagementAPI.Users do
     query =
       from(a in Account,
         left_join: adr in assoc(a, :addresses),
+        left_join: p in assoc(a, :phones),
         where: a.system_identifier == ^system,
-        preload: [:addresses]
+        preload: [:addresses, :phones]
       )
 
     opts
@@ -237,17 +239,17 @@ defmodule AccountsManagementAPI.Users do
       )
       |> Repo.all()
 
-    do_delete(address, ids)
+    do_address_delete(address, ids)
   end
 
-  defp do_delete(address, ids) when ids |> length <= 1,
+  defp do_address_delete(_, ids) when ids |> length <= 1,
     do:
       {:error,
        %Address{}
        |> Ecto.Changeset.change(%{})
        |> Ecto.Changeset.add_error(:default, "At least one default address is required")}
 
-  defp do_delete(address, ids) do
+  defp do_address_delete(address, ids) do
     with id <- ids |> Enum.find(fn id -> id != address.id end),
          {:ok, _} <- Address.set_default(%Address{id: id, account_id: address.account_id}) do
       Repo.delete(address)
@@ -265,5 +267,136 @@ defmodule AccountsManagementAPI.Users do
   """
   def change_address(%Address{} = address, attrs \\ %{}) do
     Address.changeset(address, attrs)
+  end
+
+  ########### Phones ###########
+
+  @doc """
+  Gets a single phone, including the parent account.
+
+  ## Examples
+
+      iex> get_phone("51391cdc-a7e8-467e-8ef5-ae62aef52fc0")
+      {:ok, %Phone{}}
+
+      iex> get_phone("910afada-d4b1-4b03-994d-4d80af4f4c64")
+      {:error, :not_found}
+
+  """
+  def get_phone(id) do
+    case Phone |> Repo.get(id) |> Repo.preload(:account) do
+      nil -> {:error, :not_found}
+      result -> {:ok, result}
+    end
+  end
+
+  @doc """
+  Creates a phone.
+
+  ## Examples
+
+      iex> create_phone(%{field: value})
+      {:ok, %Account{}}
+
+      iex> create_phone(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_phone(%{"account_id" => account_id} = attrs) do
+    attrs = Map.put(attrs, "verified", false)
+
+    attrs =
+      if from(a in Phone, where: a.account_id == ^account_id) |> Repo.exists?(),
+        do: attrs,
+        else: Map.put(attrs, "default", true)
+
+    %Phone{}
+    |> Phone.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  def create_phone(_),
+    do:
+      {:error,
+       %Phone{}
+       |> Ecto.Changeset.change(%{})
+       |> Ecto.Changeset.add_error(:account_id, "is required")}
+
+  @doc """
+  Updates a phone.
+
+  ## Examples
+
+  iex> update_phone(phone, %{field: new_value})
+  {:ok, %Phone{}}
+
+  iex> update_phone(phone, %{field: bad_value})
+  {:error, %Ecto.Changeset{}}
+
+  """
+  def update_phone(%Phone{default: true} = phone, attrs) do
+    attrs = Map.put(attrs, "verified", false)
+
+    with {:ok, _} <- Phone.set_default(phone) do
+      phone
+      |> Phone.changeset(attrs)
+      |> Repo.update()
+    end
+  end
+
+  def update_phone(%Phone{} = phone, attrs) do
+    phone
+    |> Phone.changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Deletes a phone.
+
+  ## Examples
+
+      iex> delete_phone(phone)
+      {:ok, %Phone{}}
+
+      iex> delete_phone(phone)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def delete_phone(%Phone{account_id: account_id} = phone) do
+    ids =
+      from(a in Phone,
+        where: a.account_id == ^account_id,
+        select: a.id
+      )
+      |> Repo.all()
+
+    do_phone_delete(phone, ids)
+  end
+
+  defp do_phone_delete(_, ids) when ids |> length <= 1,
+    do:
+      {:error,
+       %Phone{}
+       |> Ecto.Changeset.change(%{})
+       |> Ecto.Changeset.add_error(:default, "At least one default phone is required")}
+
+  defp do_phone_delete(phone, ids) do
+    with id <- ids |> Enum.find(fn id -> id != phone.id end),
+         {:ok, _} <- Phone.set_default(%Phone{id: id, account_id: phone.account_id}) do
+      Repo.delete(phone)
+    end
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking phone changes.
+
+  ## Examples
+
+      iex> change_phone(phone)
+      %Ecto.Changeset{data: %Phone{}}
+
+  """
+  def change_phone(%Phone{} = phone, attrs \\ %{}) do
+    Phone.changeset(phone, attrs)
   end
 end
