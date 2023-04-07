@@ -26,17 +26,20 @@ defmodule AccountsManagementAPI.UsersTest do
 
     test "list_accounts/0 returns all accounts" do
       %{system_identifier: sysid} = account = insert(:account)
-      assert Users.list_accounts(system_identifier: sysid) == [%{account | password: nil}]
+
+      assert Users.list_accounts(system_identifier: sysid) == [
+               %{account | password: nil, addresses: []}
+             ]
     end
 
     test "get_account!/1 returns the account with given id" do
       account = insert(:account, system_identifier: @system_identifier)
 
       assert Users.get_account(@system_identifier, account.id) ==
-               {:ok, %{account | password: nil}}
+               {:ok, %{account | password: nil, addresses: []}}
     end
 
-    test "create_account/1 with valid data creates a account" do
+    test "create_account/1 with valid data creates an account" do
       valid_attrs = %{
         "confirmed_at" => ~N[2023-03-31 09:07:00],
         "email" => "bar@foo.com",
@@ -102,7 +105,7 @@ defmodule AccountsManagementAPI.UsersTest do
       account = insert(:account, system_identifier: @system_identifier)
       assert {:error, %Ecto.Changeset{}} = Users.update_account(account, @invalid_attrs)
 
-      assert {:ok, %{account | password: nil}} ==
+      assert {:ok, %{account | password: nil, addresses: []}} ==
                Users.get_account(@system_identifier, account.id)
     end
 
@@ -112,9 +115,173 @@ defmodule AccountsManagementAPI.UsersTest do
       assert Users.get_account(@system_identifier, account.id) == {:error, :not_found}
     end
 
-    test "change_account/1 returns a account changeset" do
+    test "change_account/1 returns an account changeset" do
       account = insert(:account, system_identifier: @system_identifier)
       assert %Ecto.Changeset{} = Users.change_account(account)
+    end
+  end
+
+  describe "addresses" do
+    alias AccountsManagementAPI.Users.Address
+
+    import AccountsManagementAPI.Test.Factories
+
+    @system_identifier "my_cool_system"
+
+    @invalid_attrs %{
+      "type" => nil,
+      "name" => nil,
+      "line_1" => nil,
+      "city" => nil,
+      "state" => nil,
+      "country_code" => nil,
+      "zip_code" => nil,
+      "default" => nil,
+      "account" => nil
+    }
+
+    test "get_account/1 with preload: :addresses returns all addresses" do
+      %{system_identifier: sysid} = account = insert(:account)
+      address = insert(:address, account: account)
+      address2 = insert(:address, account: account)
+      insert(:address)
+
+      {:ok, account} =
+        sysid
+        |> Users.get_account(account.id)
+
+      assert account.addresses |> Enum.map(& &1.id) == [address.id | [address2.id]]
+    end
+
+    test "get_address/1 returns the address with given id" do
+      account = insert(:account, system_identifier: @system_identifier)
+      address = insert(:address, account: account)
+
+      account = %{account | password: nil}
+
+      assert {
+               :ok,
+               %AccountsManagementAPI.Users.Address{
+                 account: loaded_account,
+                 account_id: account_id
+               }
+             } = Users.get_address(address.id)
+
+      assert loaded_account == account
+      assert account_id == account.id
+    end
+
+    test "create_address/1 with valid data creates an address" do
+      account = insert(:account)
+
+      valid_attrs = %{
+        "type" => "personal",
+        "name" => "some name",
+        "line_1" => "123, Evergreen Terrace",
+        "city" => "Springfield",
+        "state" => "Oregon",
+        "country_code" => "US",
+        "zip_code" => "12345",
+        "account_id" => account.id
+      }
+
+      assert {:ok, %Address{} = address} = Users.create_address(valid_attrs)
+
+      assert address.type == "personal"
+      assert address.name == "some name"
+      assert address.line_1 == "123, Evergreen Terrace"
+      assert address.line_2 == nil
+      assert address.city == "Springfield"
+      assert address.state == "Oregon"
+      assert address.country_code == "US"
+      assert address.zip_code == "12345"
+      assert address.account_id == account.id
+      assert address.default == true
+
+      valid_attrs = %{
+        "type" => "business",
+        "name" => "work address",
+        "line_1" => "123, Evergreen Terrace",
+        "line_2" => "behind the tree",
+        "city" => "Springfield",
+        "state" => "Oregon",
+        "country_code" => "US",
+        "zip_code" => "12345",
+        "account_id" => account.id
+      }
+
+      assert {:ok, %Address{} = address} = Users.create_address(valid_attrs)
+
+      assert address.type == "business"
+      assert address.name == "work address"
+      assert address.line_1 == "123, Evergreen Terrace"
+      assert address.line_2 == "behind the tree"
+      assert address.city == "Springfield"
+      assert address.state == "Oregon"
+      assert address.country_code == "US"
+      assert address.zip_code == "12345"
+      assert address.account_id == account.id
+      assert address.default == false
+    end
+
+    test "create_address/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = Users.create_address(@invalid_attrs)
+    end
+
+    test "update_address/2 with valid data updates the address" do
+      account = insert(:account)
+      address = insert(:address, account: account)
+      # address2 becomes default
+      %{id: id} = insert(:address, account: account, default: true)
+
+      update_attrs = %{
+        "type" => "personal",
+        "name" => "work address edited",
+        "line_1" => "123, Evergreen Terrace edited",
+        "line_2" => "behind the tree edited",
+        "city" => "Springfield edited",
+        "state" => "Oregon edited",
+        "country_code" => "AR",
+        "zip_code" => "54321",
+        "default" => true
+      }
+
+      assert {:ok, %Address{} = address} = Users.update_address(address, update_attrs)
+      assert address.type == "personal"
+      assert address.name == "work address edited"
+      assert address.line_1 == "123, Evergreen Terrace edited"
+      assert address.line_2 == "behind the tree edited"
+      assert address.city == "Springfield edited"
+      assert address.state == "Oregon edited"
+      assert address.country_code == "AR"
+      assert address.zip_code == "54321"
+      assert address.default == true
+
+      # check that address2 is not default anymore
+      assert {:ok, %Address{default: false}} = Users.get_address(id)
+    end
+
+    test "update_address/2 with invalid data returns error changeset" do
+      address = insert(:address, account: insert(:account))
+
+      assert {:error, %Ecto.Changeset{}} = Users.update_address(address, @invalid_attrs)
+
+      {:ok, restored_address} = Users.get_address(address.id)
+      assert %{address | account: nil} == %{restored_address | account: nil}
+    end
+
+    test "delete_address/1 deletes the address" do
+      account = insert(:account)
+      addresses = insert_list(3, :address, account: account)
+      address = addresses |> Enum.at(1)
+
+      assert {:ok, %Address{}} = Users.delete_address(address)
+      assert Users.get_address(address.id) == {:error, :not_found}
+    end
+
+    test "change_address/1 returns an address changeset" do
+      address = insert(:address)
+      assert %Ecto.Changeset{} = Users.change_address(address)
     end
   end
 end

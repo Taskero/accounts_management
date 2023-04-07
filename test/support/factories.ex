@@ -23,4 +23,18 @@ defmodule AccountsManagementAPI.Test.Factories do
       system_identifier: Faker.Internet.slug()
     }
   end
+
+  def address_factory do
+    %AccountsManagementAPI.Users.Address{
+      type: "personal",
+      name: Faker.Internet.slug(),
+      line_1: Faker.Address.street_address(),
+      city: Faker.Address.city(),
+      state: Faker.Address.state(),
+      country_code: Faker.Address.country_code(),
+      zip_code: Faker.Address.postcode(),
+      default: true,
+      account: build(:account)
+    }
+  end
 end

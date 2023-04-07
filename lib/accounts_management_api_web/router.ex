@@ -8,7 +8,9 @@ defmodule AccountsManagementAPIWeb.Router do
   scope "/api", AccountsManagementAPIWeb do
     pipe_through :api
 
-    resources "/accounts", AccountController, only: [:index, :create, :show, :update, :delete]
+    resources "/accounts", AccountController, only: [:index, :create, :show, :update, :delete] do
+      resources "/addresses", AddressController, only: [:index, :create, :show, :update, :delete]
+    end
   end
 
   # Enable LiveDashboard in development

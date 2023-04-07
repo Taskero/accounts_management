@@ -4,24 +4,29 @@ defmodule AccountsManagementAPI.Users.Account do
   use Ecto.Schema
 
   import Ecto.Changeset
+  import Ecto.Query, only: [from: 2]
 
+  alias AccountsManagementAPI.Repo
+  alias AccountsManagementAPI.Users.Address
   alias Encryption.Hashing
 
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
   schema "accounts" do
-    field :confirmed_at, :naive_datetime
-    field :email, :string
-    field :email_verified, :boolean, default: false
-    field :last_name, :string
-    field :locale, :string
-    field :name, :string
-    field :password, :string, virtual: true
-    field :password_hash, :string
-    field :picture, :string
-    field :start_date, :naive_datetime
-    field :status, :string
-    field :system_identifier, :string
+    field(:confirmed_at, :naive_datetime)
+    field(:email, :string)
+    field(:email_verified, :boolean, default: false)
+    field(:last_name, :string)
+    field(:locale, :string)
+    field(:name, :string)
+    field(:password, :string, virtual: true)
+    field(:password_hash, :string)
+    field(:picture, :string)
+    field(:start_date, :naive_datetime)
+    field(:status, :string)
+    field(:system_identifier, :string)
+
+    has_many(:addresses, AccountsManagementAPI.Users.Address, on_delete: :delete_all)
 
     timestamps()
   end
@@ -41,6 +46,16 @@ defmodule AccountsManagementAPI.Users.Account do
     |> unique_constraint([:email, :system_identifier],
       name: :accounts_email_system_identifier_index
     )
+  end
+
+  def default_address(account) do
+    query =
+      from(a in Address,
+        where: a.account_id == ^account.id and a.default == true
+      )
+
+    query
+    |> Repo.one()
   end
 
   defp hash_password(%{valid?: true, changes: %{password: password}} = changeset) do

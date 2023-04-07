@@ -21,6 +21,23 @@ erDiagram
         datetime confirmed_at
         character_varying system_identifier
     }
+
+    address {
+        uuid id
+        uuid account_id
+        character_varying type
+        character_varying name
+        character_varying line_1
+        character_varying line_2
+        character_varying city
+        character_varying state
+        character_varying country_code
+        character_varying zip_code
+        bool default
+    }
+
+    account ||--|{ address : has
+
 ```
 
 ## Dependencies
