@@ -28,7 +28,7 @@ defmodule AccountsManagementAPI.UsersTest do
       %{system_identifier: sysid} = account = insert(:account)
 
       assert Users.list_accounts(system_identifier: sysid) == [
-               %{account | password: nil, addresses: []}
+               %{account | password: nil, addresses: [], phones: []}
              ]
     end
 
@@ -36,7 +36,7 @@ defmodule AccountsManagementAPI.UsersTest do
       account = insert(:account, system_identifier: @system_identifier)
 
       assert Users.get_account(@system_identifier, account.id) ==
-               {:ok, %{account | password: nil, addresses: []}}
+               {:ok, %{account | password: nil, addresses: [], phones: []}}
     end
 
     test "create_account/1 with valid data creates an account" do
@@ -105,7 +105,7 @@ defmodule AccountsManagementAPI.UsersTest do
       account = insert(:account, system_identifier: @system_identifier)
       assert {:error, %Ecto.Changeset{}} = Users.update_account(account, @invalid_attrs)
 
-      assert {:ok, %{account | password: nil, addresses: []}} ==
+      assert {:ok, %{account | password: nil, addresses: [], phones: []}} ==
                Users.get_account(@system_identifier, account.id)
     end
 
@@ -282,6 +282,141 @@ defmodule AccountsManagementAPI.UsersTest do
     test "change_address/1 returns an address changeset" do
       address = insert(:address)
       assert %Ecto.Changeset{} = Users.change_address(address)
+    end
+  end
+
+  describe "phones" do
+    alias AccountsManagementAPI.Users.Phone
+
+    import AccountsManagementAPI.Test.Factories
+
+    @system_identifier "my_cool_system"
+
+    @invalid_attrs %{
+      "type" => nil,
+      "name" => nil,
+      "number" => nil,
+      "default" => nil,
+      "verified" => nil,
+      "account" => nil
+    }
+
+    test "get_account/1 with preload: :phones returns all phones" do
+      %{system_identifier: sysid} = account = insert(:account)
+      phone = insert(:phone, account: account)
+      phone2 = insert(:phone, account: account)
+      insert(:phone)
+
+      {:ok, account} =
+        sysid
+        |> Users.get_account(account.id)
+
+      assert account.phones |> Enum.map(& &1.id) == [phone.id | [phone2.id]]
+    end
+
+    test "get_phone/1 returns the phone with given id" do
+      account = insert(:account, system_identifier: @system_identifier)
+      phone = insert(:phone, account: account)
+
+      account = %{account | password: nil}
+
+      assert {
+               :ok,
+               %AccountsManagementAPI.Users.Phone{
+                 account: loaded_account,
+                 account_id: account_id
+               }
+             } = Users.get_phone(phone.id)
+
+      assert loaded_account == account
+      assert account_id == account.id
+    end
+
+    test "create_phone/1 with valid data creates an phone" do
+      account = insert(:account)
+
+      valid_attrs = %{
+        "type" => "personal",
+        "name" => "some name",
+        "number" => "+1234567890",
+        "account_id" => account.id
+      }
+
+      assert {:ok, %Phone{} = phone} = Users.create_phone(valid_attrs)
+
+      assert phone.type == "personal"
+      assert phone.name == "some name"
+      assert phone.number == "+1234567890"
+      assert phone.account_id == account.id
+      assert phone.default == true
+      assert phone.verified == false
+
+      valid_attrs = %{
+        "type" => "business",
+        "name" => "work phone",
+        "number" => "+9876543210",
+        "account_id" => account.id
+      }
+
+      assert {:ok, %Phone{} = phone} = Users.create_phone(valid_attrs)
+
+      assert phone.type == "business"
+      assert phone.name == "work phone"
+      assert phone.number == "+9876543210"
+      assert phone.account_id == account.id
+      assert phone.default == false
+      assert phone.verified == false
+    end
+
+    test "create_phone/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = Users.create_phone(@invalid_attrs)
+    end
+
+    test "update_phone/2 with valid data updates the phone" do
+      account = insert(:account)
+      phone = insert(:phone, account: account)
+      # phone2 becomes default
+      %{id: id} = insert(:phone, account: account, default: true)
+
+      update_attrs = %{
+        "type" => "personal",
+        "name" => "work phone edited",
+        "number" => "9999999999",
+        "default" => true
+      }
+
+      assert {:ok, %Phone{} = phone} = Users.update_phone(phone, update_attrs)
+      assert phone.type == "personal"
+      assert phone.name == "work phone edited"
+      assert phone.number == "9999999999"
+      assert phone.default == true
+      assert phone.verified == false
+
+      # check that phone2 is not default anymore
+      assert {:ok, %Phone{default: false}} = Users.get_phone(id)
+    end
+
+    test "update_phone/2 with invalid data returns error changeset" do
+      phone = insert(:phone, account: insert(:account))
+
+      assert {:error, %Ecto.Changeset{}} = Users.update_phone(phone, @invalid_attrs)
+
+      {:ok, restored_phone} = Users.get_phone(phone.id)
+      assert %{phone | account: nil} == %{restored_phone | account: nil}
+    end
+
+    test "delete_phone/1 deletes the phone" do
+      account = insert(:account)
+      phones = insert_list(3, :phone, account: account)
+      phone = phones |> Enum.at(1)
+
+      assert {:ok, %Phone{}} = Users.delete_phone(phone)
+      assert Users.get_phone(phone.id) == {:error, :not_found}
+    end
+
+    test "change_phone/1 returns an phone changeset" do
+      phone = insert(:phone)
+      assert %Ecto.Changeset{} = Users.change_phone(phone)
     end
   end
 end
