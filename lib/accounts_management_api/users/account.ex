@@ -8,7 +8,6 @@ defmodule AccountsManagementAPI.Users.Account do
 
   alias AccountsManagementAPI.Repo
   alias AccountsManagementAPI.Users.{Address, Phone}
-  alias Encryption.Hashing
 
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
@@ -59,7 +58,7 @@ defmodule AccountsManagementAPI.Users.Account do
     |> Repo.one()
   end
 
-  defp hash_password(%{valid?: true, changes: %{password: password}} = changeset) do
+  defp hash_password(%Ecto.Changeset{valid?: true, changes: %{password: password}} = changeset) do
     changeset
     |> validate_length(:password, min: 12, max: 80)
     |> validate_format(:password, ~r/[a-z]/, message: "at least one lower case character")
@@ -67,7 +66,7 @@ defmodule AccountsManagementAPI.Users.Account do
     |> validate_format(:password, ~r/[!?@#$%^&*_0-9]/,
       message: "at least one digit or punctuation character"
     )
-    |> put_change(:password_hash, Hashing.hash(password))
+    |> change(Argon2.add_hash(password))
   end
 
   defp hash_password(changeset), do: changeset

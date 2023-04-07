@@ -11,7 +11,7 @@ defmodule AccountsManagementAPI.Test.Factories do
     %Account{
       email: Faker.Internet.email(),
       password: Faker.Internet.slug(),
-      password_hash: Faker.Internet.slug() |> Encryption.Hashing.hash(),
+      password_hash: Faker.Internet.slug() |> Argon2.hash_pwd_salt(),
       email_verified: true,
       name: Faker.Person.first_name(),
       last_name: Faker.Person.last_name(),
