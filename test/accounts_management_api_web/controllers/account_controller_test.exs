@@ -3,6 +3,7 @@ defmodule AccountsManagementAPIWeb.AccountControllerTest do
 
   import AccountsManagementAPI.Test.Factories
 
+  alias AccountsManagementAPIWeb.Auth.AuthHelper
   alias AccountsManagementAPI.Users.Account
 
   doctest AccountsManagementAPIWeb.AccountController
@@ -24,18 +25,21 @@ defmodule AccountsManagementAPIWeb.AccountControllerTest do
   }
 
   setup %{conn: conn} do
+    account = insert(:account, system_identifier: @system_identifier)
+
     conn =
       conn
       |> put_req_header("accept", "application/json")
       |> put_req_header("system-identifier", @system_identifier)
+      |> AuthHelper.with_valid_authorization_header(account.id)
 
-    {:ok, conn: conn}
+    {:ok, conn: conn, account: account}
   end
 
   describe "index" do
     test "lists all accounts", %{conn: conn} do
       conn = get(conn, ~p"/api/accounts")
-      assert json_response(conn, 200)["data"] == []
+      assert json_response(conn, 200)["data"] |> length == 1
     end
   end
 
@@ -58,7 +62,10 @@ defmodule AccountsManagementAPIWeb.AccountControllerTest do
       conn = post(conn, ~p"/api/accounts", body)
       assert %{"id" => id} = json_response(conn, 201)["data"]
 
-      conn = get(new_conn(), ~p"/api/accounts/#{id}")
+      conn =
+        new_conn()
+        |> AuthHelper.with_valid_authorization_header(id)
+        |> get(~p"/api/accounts/#{id}")
 
       assert %{
                "id" => ^id,
@@ -166,7 +173,12 @@ defmodule AccountsManagementAPIWeb.AccountControllerTest do
       conn = put(conn, ~p"/api/accounts/#{account}", body)
       assert %{"id" => ^id} = json_response(conn, 200)["data"]
 
-      conn = get(new_conn(), ~p"/api/accounts/#{id}")
+      conn =
+        new_conn()
+        |> AuthHelper.with_valid_authorization_header(account.id)
+        |> get(~p"/api/accounts/#{id}")
+
+      insert(:account, system_identifier: @system_identifier)
 
       %{
         "id" => ^id,
@@ -191,7 +203,10 @@ defmodule AccountsManagementAPIWeb.AccountControllerTest do
       conn = delete(conn, ~p"/api/accounts/#{account}")
       assert response(conn, 204)
 
-      conn = get(new_conn(), ~p"/api/accounts/#{account}")
+      conn =
+        new_conn()
+        |> AuthHelper.with_valid_authorization_header(account.id)
+        |> get(~p"/api/accounts/#{account}")
 
       assert response(conn, 404)
     end

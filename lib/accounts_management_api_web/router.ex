@@ -22,7 +22,7 @@ defmodule AccountsManagementAPIWeb.Router do
 
   # Secure routes
   scope "/api", AccountsManagementAPIWeb do
-    pipe_through(:api)
+    pipe_through [:api, :auth]
 
     resources "/accounts", AccountController, only: [:index, :show, :update, :delete] do
       resources("/addresses", AddressController, only: [:index, :create, :show, :update, :delete])

@@ -3,17 +3,12 @@ defmodule AccountManagementAPIWeb.AuthControllerTest do
 
   import AccountsManagementAPI.Test.Factories
 
-  alias AccountsManagementAPIWeb.Auth.Guardian
+  alias AccountsManagementAPIWeb.Auth.{AuthHelper, Guardian}
 
   @system_identifier "my_cool_system"
   @valid_pass "QWERTY123!!asdfgh"
 
   setup %{conn: conn} do
-    conn =
-      conn
-      |> put_req_header("accept", "application/json")
-      |> put_req_header("system-identifier", @system_identifier)
-
     account =
       insert(:account,
         system_identifier: @system_identifier,
@@ -21,6 +16,12 @@ defmodule AccountManagementAPIWeb.AuthControllerTest do
         password: @valid_pass,
         password_hash: @valid_pass |> Argon2.hash_pwd_salt()
       )
+
+    conn =
+      conn
+      |> put_req_header("accept", "application/json")
+      |> put_req_header("system-identifier", @system_identifier)
+      |> AuthHelper.with_valid_authorization_header(account.id)
 
     {:ok, account: account, conn: conn}
   end
