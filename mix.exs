@@ -72,6 +72,8 @@ defmodule AccountsManagementAPI.MixProject do
       # Authentication
       {:guardian, "~> 2.2"},
       {:guardian_phoenix, "~> 2.0"},
+      {:comeonin, "~> 5.3.3"},
+      {:argon2_elixir, "~> 3.0"},
 
       # Mix tasks to simplify use of Dialyzer in Elixir projects.
       {:dialyxir, "~> 1.0", only: :dev, runtime: false},

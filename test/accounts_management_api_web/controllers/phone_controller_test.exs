@@ -3,6 +3,7 @@ defmodule AccountsManagementAPIWeb.PhoneControllerTest do
 
   import AccountsManagementAPI.Test.Factories
 
+  alias AccountsManagementAPIWeb.Auth.AuthHelper
   alias AccountsManagementAPI.Users
   alias AccountsManagementAPI.Users.Phone
 
@@ -20,12 +21,14 @@ defmodule AccountsManagementAPIWeb.PhoneControllerTest do
   }
 
   setup %{conn: conn} do
+    account = insert(:account, system_identifier: @system_identifier)
+
     conn =
       conn
       |> put_req_header("accept", "application/json")
       |> put_req_header("system-identifier", @system_identifier)
+      |> AuthHelper.with_valid_authorization_header(account.id)
 
-    account = insert(:account, system_identifier: @system_identifier)
     {:ok, conn: conn, account: account}
   end
 
@@ -53,7 +56,7 @@ defmodule AccountsManagementAPIWeb.PhoneControllerTest do
       conn = post(conn, ~p"/api/accounts/#{account}/phones", body)
       assert %{"id" => id} = json_response(conn, 201)["data"]
 
-      conn = get(new_conn(), ~p"/api/accounts/#{account}/phones/#{id}")
+      conn = AuthHelper.new_conn(account.id) |> get(~p"/api/accounts/#{account}/phones/#{id}")
 
       assert %{
                "id" => ^id,
@@ -91,7 +94,7 @@ defmodule AccountsManagementAPIWeb.PhoneControllerTest do
       conn = put(conn, ~p"/api/accounts/#{account}/phones/#{id}", body)
       assert %{"id" => ^id} = json_response(conn, 200)["data"]
 
-      conn = get(new_conn(), ~p"/api/accounts/#{account}/phones/#{id}")
+      conn = AuthHelper.new_conn(account.id) |> get(~p"/api/accounts/#{account}/phones/#{id}")
 
       assert %{
                "account_id" => phone.account_id,
@@ -119,9 +122,9 @@ defmodule AccountsManagementAPIWeb.PhoneControllerTest do
       conn = delete(conn, ~p"/api/accounts/#{account}/phones/#{phone}")
       assert response(conn, 204)
 
-      conn = get(new_conn(), ~p"/api/accounts/#{account}/phones/#{phone}")
-
-      assert response(conn, 404)
+      assert AuthHelper.new_conn(account.id)
+             |> get(~p"/api/accounts/#{account}/phones/#{phone.id}")
+             |> response(404)
     end
 
     test "deletes default phone set another one", %{
@@ -158,9 +161,5 @@ defmodule AccountsManagementAPIWeb.PhoneControllerTest do
     phone = insert(:phone, account: account)
 
     %{account: account, phone: phone}
-  end
-
-  defp new_conn() do
-    build_conn() |> put_req_header("system-identifier", @system_identifier)
   end
 end

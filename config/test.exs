@@ -23,5 +23,13 @@ config :accounts_management_api, AccountsManagementAPIWeb.Endpoint,
 # Print only warnings and errors during test
 config :logger, level: :warning
 
+config :accounts_management_api, AccountsManagementAPIWeb.Auth.Guardian,
+  secret_key: "SECRET_KEY_BASE"
+
+# Configure argon2_elixir to speed up tests
+config :argon2_elixir,
+  t_cost: 1,
+  m_cost: 8
+
 # Initialize plugs at runtime for faster test compilation
 config :phoenix, :plug_init_mode, :runtime

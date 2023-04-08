@@ -5,10 +5,25 @@ defmodule AccountsManagementAPIWeb.Router do
     plug(:accepts, ["json"])
   end
 
-  scope "/api", AccountsManagementAPIWeb do
-    pipe_through(:api)
+  pipeline :auth do
+    plug AccountsManagementAPIWeb.Auth.Pipeline
+  end
 
-    resources "/accounts", AccountController, only: [:index, :create, :show, :update, :delete] do
+  # Unsecure routes
+  scope "/api", AccountsManagementAPIWeb do
+    pipe_through :api
+
+    resources "/auth", AuthController, only: [:create]
+    resources "/auth/refresh", AuthController, only: [:create]
+
+    resources "/accounts", AccountController, only: [:create]
+  end
+
+  # Secure routes
+  scope "/api", AccountsManagementAPIWeb do
+    pipe_through [:api, :auth]
+
+    resources "/accounts", AccountController, only: [:index, :show, :update, :delete] do
       resources("/addresses", AddressController, only: [:index, :create, :show, :update, :delete])
       resources("/phones", PhoneController, only: [:index, :create, :show, :update, :delete])
     end

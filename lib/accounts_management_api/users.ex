@@ -52,6 +52,10 @@ defmodule AccountsManagementAPI.Users do
     query |> where([a], a.id == ^id)
   end
 
+  defp filter_query(query, email: email) do
+    query |> where([a], a.email == ^email)
+  end
+
   defp filter_query(query, _), do: query
 
   @doc """

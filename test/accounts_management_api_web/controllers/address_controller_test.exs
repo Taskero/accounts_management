@@ -3,6 +3,7 @@ defmodule AccountsManagementAPIWeb.AddressControllerTest do
 
   import AccountsManagementAPI.Test.Factories
 
+  alias AccountsManagementAPIWeb.Auth.AuthHelper
   alias AccountsManagementAPI.Users
   alias AccountsManagementAPI.Users.Address
 
@@ -23,13 +24,9 @@ defmodule AccountsManagementAPIWeb.AddressControllerTest do
   }
 
   setup %{conn: conn} do
-    conn =
-      conn
-      |> put_req_header("accept", "application/json")
-      |> put_req_header("system-identifier", @system_identifier)
-
     account = insert(:account, system_identifier: @system_identifier)
-    {:ok, conn: conn, account: account}
+
+    {:ok, conn: AuthHelper.new_conn(account.id), account: account}
   end
 
   describe "index" do
@@ -60,7 +57,7 @@ defmodule AccountsManagementAPIWeb.AddressControllerTest do
       conn = post(conn, ~p"/api/accounts/#{account}/addresses", body)
       assert %{"id" => id} = json_response(conn, 201)["data"]
 
-      conn = get(new_conn(), ~p"/api/accounts/#{account}/addresses/#{id}")
+      conn = get(AuthHelper.new_conn(account.id), ~p"/api/accounts/#{account}/addresses/#{id}")
 
       assert %{
                "id" => ^id,
@@ -102,7 +99,7 @@ defmodule AccountsManagementAPIWeb.AddressControllerTest do
       conn = put(conn, ~p"/api/accounts/#{account}/addresses/#{id}", body)
       assert %{"id" => ^id} = json_response(conn, 200)["data"]
 
-      conn = get(new_conn(), ~p"/api/accounts/#{account}/addresses/#{id}")
+      conn = get(AuthHelper.new_conn(account.id), ~p"/api/accounts/#{account}/addresses/#{id}")
 
       assert %{
                "account_id" => address.account_id,
@@ -134,7 +131,8 @@ defmodule AccountsManagementAPIWeb.AddressControllerTest do
       conn = delete(conn, ~p"/api/accounts/#{account}/addresses/#{address}")
       assert response(conn, 204)
 
-      conn = get(new_conn(), ~p"/api/accounts/#{account}/addresses/#{address}")
+      conn =
+        AuthHelper.new_conn(account.id) |> get(~p"/api/accounts/#{account}/addresses/#{address}")
 
       assert response(conn, 404)
     end
@@ -173,9 +171,5 @@ defmodule AccountsManagementAPIWeb.AddressControllerTest do
     address = insert(:address, account: account)
 
     %{account: account, address: address}
-  end
-
-  defp new_conn() do
-    build_conn() |> put_req_header("system-identifier", @system_identifier)
   end
 end
