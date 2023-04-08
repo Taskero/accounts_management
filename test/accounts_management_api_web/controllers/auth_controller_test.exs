@@ -110,4 +110,62 @@ defmodule AccountManagementAPIWeb.AuthControllerTest do
       assert %{"errors" => %{"detail" => "Unauthorized"}} = json_response(conn, 401)
     end
   end
+
+  describe "post /api/auth/refresh" do
+    test "with valid  JWT", %{
+      account: account,
+      conn: conn
+    } do
+      old_jwt =
+        conn |> get_req_header("authorization") |> List.first() |> String.replace("Bearer ", "")
+
+      conn = post(conn, ~p"/api/auth/refresh")
+
+      %{
+        "access_token" => jwt,
+        "account_id" => account_id,
+        "expires_in" => exp,
+        "token_type" => "Bearer"
+      } = json_response(conn, 201)
+
+      assert account_id == account.id
+      assert old_jwt != jwt
+      assert exp > DateTime.utc_now() |> DateTime.to_unix()
+
+      assert {:ok,
+              %{
+                "exp" => ^exp,
+                "sub" => ^account_id,
+                "sysid" => @system_identifier
+              }} = jwt |> Guardian.decode_and_verify()
+    end
+
+    test "with expired JWT return error", %{account: account} do
+      {:ok, expired_jwt, _} =
+        Guardian.encode_and_sign(account, %{
+          "exp" => DateTime.utc_now() |> DateTime.add(-10) |> DateTime.to_unix()
+        })
+
+      conn =
+        build_conn()
+        |> put_req_header("accept", "application/json")
+        |> put_req_header("system-identifier", @system_identifier)
+        |> put_req_header("authorization", "Bearer " <> expired_jwt)
+
+      conn = post(conn, ~p"/api/auth/refresh")
+
+      assert %{"errors" => %{"detail" => "Unauthorized"}} = json_response(conn, 401)
+    end
+
+    test "without jwt return error" do
+      conn =
+        build_conn()
+        |> put_req_header("accept", "application/json")
+        |> put_req_header("system-identifier", @system_identifier)
+
+      conn = post(conn, ~p"/api/auth/refresh")
+
+      assert %{"errors" => %{"detail" => "Unauthorized"}} = json_response(conn, 401)
+    end
+  end
 end

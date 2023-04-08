@@ -13,9 +13,8 @@ defmodule AccountsManagementAPIWeb.Router do
   scope "/api", AccountsManagementAPIWeb do
     pipe_through :api
 
-    resources "/auth", AuthController, only: [:create] do
-      resources "/refresh", AuthController, only: [:create]
-    end
+    resources "/auth", AuthController, only: [:create]
+    resources "/auth/refresh", AuthController, only: [:create]
 
     resources "/accounts", AccountController, only: [:create]
   end
