@@ -24,4 +24,13 @@ defmodule AccountsManagementAPIWeb.FallbackController do
     )
     |> render(:"404")
   end
+
+  def call(conn, {:error, "invalid password"}), do: call(conn, {:error, :unauthorized})
+
+  def call(conn, {:error, :unauthorized}) do
+    conn
+    |> put_status(:unauthorized)
+    |> put_view(json: AccountsManagementAPIWeb.ErrorJSON)
+    |> render(:"401")
+  end
 end

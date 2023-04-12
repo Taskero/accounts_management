@@ -20,7 +20,6 @@ defmodule AccountsManagementAPIWeb.Auth.Pipeline do
     "jti": "d0ef5d60-539f-47c8-addf-1fe8b9d74955", JWT ID
     "nbf": 1679864591, Not Before
     "sub": "04af6966-46f1-461f-90fe-15c35d2a59df", Subject
-    "sysid": "my_system", Custom claim
     "typ": "access" Type
   }
   """

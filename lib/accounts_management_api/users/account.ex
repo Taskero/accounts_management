@@ -23,7 +23,6 @@ defmodule AccountsManagementAPI.Users.Account do
     field(:picture, :string)
     field(:start_date, :naive_datetime)
     field(:status, :string)
-    field(:system_identifier, :string)
 
     has_many(:addresses, Address, on_delete: :delete_all)
     has_many(:phones, Phone, on_delete: :delete_all)
@@ -32,7 +31,7 @@ defmodule AccountsManagementAPI.Users.Account do
   end
 
   @optional ~w(picture password confirmed_at start_date)a
-  @required ~w(email password_hash email_verified name last_name locale status system_identifier)a
+  @required ~w(email password_hash email_verified name last_name locale status)a
 
   @doc false
   def changeset(account, attrs) do
@@ -43,9 +42,7 @@ defmodule AccountsManagementAPI.Users.Account do
     |> hash_password()
     |> validate_required(@required)
     |> validate_email_format()
-    |> unique_constraint([:email, :system_identifier],
-      name: :accounts_email_system_identifier_index
-    )
+    |> unique_constraint([:email], name: :accounts_email_index)
   end
 
   def default_address(account) do

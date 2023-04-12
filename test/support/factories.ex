@@ -19,8 +19,7 @@ defmodule AccountsManagementAPI.Test.Factories do
       locale: "en",
       picture: Faker.Internet.url(),
       start_date: DateTime.utc_now(),
-      status: "active",
-      system_identifier: Faker.Internet.slug()
+      status: "active"
     }
   end
 

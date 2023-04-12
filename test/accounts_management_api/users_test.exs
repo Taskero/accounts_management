@@ -8,8 +8,6 @@ defmodule AccountsManagementAPI.UsersTest do
 
     import AccountsManagementAPI.Test.Factories
 
-    @system_identifier "my_cool_system"
-
     @invalid_attrs %{
       "confirmed_at" => nil,
       "email" => nil,
@@ -20,22 +18,21 @@ defmodule AccountsManagementAPI.UsersTest do
       "password_hash" => nil,
       "picture" => nil,
       "start_date" => nil,
-      "status" => nil,
-      "system_identifier" => nil
+      "status" => nil
     }
 
     test "list_accounts/0 returns all accounts" do
-      %{system_identifier: sysid} = account = insert(:account)
+      %{} = account = insert(:account)
 
-      assert Users.list_accounts(system_identifier: sysid) == [
+      assert Users.list_accounts() == [
                %{account | password: nil, addresses: [], phones: []}
              ]
     end
 
     test "get_account!/1 returns the account with given id" do
-      account = insert(:account, system_identifier: @system_identifier)
+      account = insert(:account)
 
-      assert Users.get_account(@system_identifier, account.id) ==
+      assert Users.get_account(account.id) ==
                {:ok, %{account | password: nil, addresses: [], phones: []}}
     end
 
@@ -49,8 +46,7 @@ defmodule AccountsManagementAPI.UsersTest do
         "name" => "some name",
         "password" => "some!Password_hash",
         "picture" => "some picture",
-        "start_date" => ~N[2023-03-31 09:07:00],
-        "system_identifier" => "some system_identifier"
+        "start_date" => ~N[2023-03-31 09:07:00]
       }
 
       assert {:ok, %Account{} = account} = Users.create_account(valid_attrs)
@@ -64,7 +60,6 @@ defmodule AccountsManagementAPI.UsersTest do
       assert account.picture == "some picture"
       assert account.start_date == ~N[2023-03-31 09:07:00]
       assert account.status == "pending"
-      assert account.system_identifier == "some system_identifier"
     end
 
     test "create_account/1 with invalid data returns error changeset" do
@@ -84,8 +79,7 @@ defmodule AccountsManagementAPI.UsersTest do
         "password" => "someUpdatedPassword_hash!",
         "picture" => "some updated picture",
         "start_date" => ~N[2023-04-01 09:07:00],
-        "status" => "pending",
-        "system_identifier" => "some updated system_identifier"
+        "status" => "pending"
       }
 
       assert {:ok, %Account{} = account} = Users.update_account(account, update_attrs)
@@ -98,25 +92,24 @@ defmodule AccountsManagementAPI.UsersTest do
       assert account.picture == "some updated picture"
       assert account.start_date == ~N[2023-04-01 09:07:00]
       assert account.status == "pending"
-      assert account.system_identifier == "some updated system_identifier"
     end
 
     test "update_account/2 with invalid data returns error changeset" do
-      account = insert(:account, system_identifier: @system_identifier)
+      account = insert(:account)
       assert {:error, %Ecto.Changeset{}} = Users.update_account(account, @invalid_attrs)
 
       assert {:ok, %{account | password: nil, addresses: [], phones: []}} ==
-               Users.get_account(@system_identifier, account.id)
+               Users.get_account(account.id)
     end
 
     test "delete_account/1 deletes the account" do
-      account = insert(:account, system_identifier: @system_identifier)
+      account = insert(:account)
       assert {:ok, %Account{}} = Users.delete_account(account)
-      assert Users.get_account(@system_identifier, account.id) == {:error, :not_found}
+      assert Users.get_account(account.id) == {:error, :not_found}
     end
 
     test "change_account/1 returns an account changeset" do
-      account = insert(:account, system_identifier: @system_identifier)
+      account = insert(:account)
       assert %Ecto.Changeset{} = Users.change_account(account)
     end
   end
@@ -125,8 +118,6 @@ defmodule AccountsManagementAPI.UsersTest do
     alias AccountsManagementAPI.Users.Address
 
     import AccountsManagementAPI.Test.Factories
-
-    @system_identifier "my_cool_system"
 
     @invalid_attrs %{
       "type" => nil,
@@ -141,20 +132,18 @@ defmodule AccountsManagementAPI.UsersTest do
     }
 
     test "get_account/1 with preload: :addresses returns all addresses" do
-      %{system_identifier: sysid} = account = insert(:account)
+      %{} = account = insert(:account)
       address = insert(:address, account: account)
       address2 = insert(:address, account: account)
       insert(:address)
 
-      {:ok, account} =
-        sysid
-        |> Users.get_account(account.id)
+      {:ok, account} = Users.get_account(account.id)
 
       assert account.addresses |> Enum.map(& &1.id) == [address.id | [address2.id]]
     end
 
     test "get_address/1 returns the address with given id" do
-      account = insert(:account, system_identifier: @system_identifier)
+      account = insert(:account)
       address = insert(:address, account: account)
 
       account = %{account | password: nil}
@@ -290,8 +279,6 @@ defmodule AccountsManagementAPI.UsersTest do
 
     import AccountsManagementAPI.Test.Factories
 
-    @system_identifier "my_cool_system"
-
     @invalid_attrs %{
       "type" => nil,
       "name" => nil,
@@ -302,20 +289,18 @@ defmodule AccountsManagementAPI.UsersTest do
     }
 
     test "get_account/1 with preload: :phones returns all phones" do
-      %{system_identifier: sysid} = account = insert(:account)
+      %{} = account = insert(:account)
       phone = insert(:phone, account: account)
       phone2 = insert(:phone, account: account)
       insert(:phone)
 
-      {:ok, account} =
-        sysid
-        |> Users.get_account(account.id)
+      {:ok, account} = Users.get_account(account.id)
 
       assert account.phones |> Enum.map(& &1.id) == [phone.id | [phone2.id]]
     end
 
     test "get_phone/1 returns the phone with given id" do
-      account = insert(:account, system_identifier: @system_identifier)
+      account = insert(:account)
       phone = insert(:phone, account: account)
 
       account = %{account | password: nil}

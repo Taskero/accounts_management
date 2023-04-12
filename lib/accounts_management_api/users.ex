@@ -11,33 +11,27 @@ defmodule AccountsManagementAPI.Users do
   ########### Accounts ###########
 
   @doc """
-  `system_identifier` Is required to any query
 
       ## Examples
 
-      iex>  [system_identifier: :my_app] |> AccountsManagementAPI.Users.list_accounts()
+      iex>  AccountsManagementAPI.Users.list_accounts()
       [%AccountsManagementAPI.Users.Account{}]
 
   """
-  def list_accounts(system_identifier: nil), do: []
-  def list_accounts([{:system_identifier, nil} | _]), do: []
-
-  def list_accounts(system_identifier: system) do
+  def list_accounts() do
     from(a in Account,
       left_join: adr in assoc(a, :addresses),
       left_join: p in assoc(a, :phones),
-      where: a.system_identifier == ^system,
       preload: [:addresses, :phones]
     )
     |> Repo.all()
   end
 
-  def list_accounts([{:system_identifier, system} | opts]) do
+  def list_accounts(opts) do
     query =
       from(a in Account,
         left_join: adr in assoc(a, :addresses),
         left_join: p in assoc(a, :phones),
-        where: a.system_identifier == ^system,
         preload: [:addresses, :phones]
       )
 
@@ -63,17 +57,15 @@ defmodule AccountsManagementAPI.Users do
 
   ## Examples
 
-      iex> get_account("my_app", "ebfbb184-06f6-4819-812a-3e242bdb42d3")
+      iex> get_account("ebfbb184-06f6-4819-812a-3e242bdb42d3")
       {:ok, %Account{}}
 
-      iex> get_account("my_app", "9b65193c-2293-4809-9d34-06a12ba3ddcf")
+      iex> get_account("9b65193c-2293-4809-9d34-06a12ba3ddcf")
       {:error, :not_found}
 
   """
-  def get_account(system, id) do
-    case [system_identifier: system, id: id]
-         |> list_accounts()
-         |> List.first() do
+  def get_account(id) do
+    case Account |> Repo.get(id) |> Repo.preload([:addresses, :phones]) do
       nil -> {:error, :not_found}
       result -> {:ok, result}
     end
