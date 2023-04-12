@@ -7,11 +7,10 @@ Manage users accounts, services access SaaS
 ```mermaid
 erDiagram
 
-    accounts {
+    users {
         uuid id
         character_varying email
         character_varying password_hash
-        bool email_verified
         character_varying name
         character_varying last_name
         character_varying picture
@@ -23,7 +22,7 @@ erDiagram
 
     addresses {
         uuid id
-        uuid account_id
+        uuid user_id
         character_varying type
         character_varying name
         character_varying line_1
@@ -37,7 +36,7 @@ erDiagram
 
     phones {
         uuid id
-        uuid account_id
+        uuid user_id
         character_varying type
         character_varying name
         character_varying number
@@ -45,8 +44,8 @@ erDiagram
         bool verified
     }
 
-    accounts ||--|{ addresses : has
-    accounts ||--|{ phones : has
+    users ||--|{ addresses : has
+    users ||--|{ phones : has
 
 ```
 
@@ -72,7 +71,7 @@ mix dialyzer # static analysis tool for Erlang
 mix docs # gen doc
 
 mix phx.server
-open http://localhost:4000/api/accounts
+open http://localhost:4000/api/users
 ```
 
 ## Routes
@@ -118,12 +117,12 @@ flyctl launch
 # ? Choose an app name (leave blank to generate one): accounts-management-api
 # ? Select Organization: AccountsManagementAPI (AccountsManagementAPI)
 # ? Choose a region for deployment: Sao Paulo, Brazil (gru)
-# Admin URL: https://fly.io/apps/accounts-management-api
+# Admin URL: https://fly.io/apps/users-management-api
 # Hostname: accounts-management-api.fly.dev
 # Set secrets on accounts-management-api: SECRET_KEY_BASE
 # ? Would you like to set up a Postgresql database now? Yes
 # ? Select configuration: Development - Single node, 1x shared CPU, 256MB RAM, 1GB disk
-# https://accounts-management-api.fly.dev/api/accounts
+# https://users-management-api.fly.dev/api/users
 
 fly secrets set MY_SECRET_KEY=my_secret_value
 fly deploy

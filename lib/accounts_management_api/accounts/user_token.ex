@@ -9,7 +9,7 @@ defmodule AccountsManagementAPI.Accounts.UserToken do
   @rand_size 32
 
   # It is very important to keep the reset password token expiry short,
-  # since someone with access to the email may take over the account.
+  # since someone with access to the email may take over the user.
   @reset_password_validity_in_days 1
   @confirm_validity_in_days 7
   @change_email_validity_in_days 7
@@ -107,7 +107,7 @@ defmodule AccountsManagementAPI.Accounts.UserToken do
   database and the user email has not changed. This function also checks
   if the token is being used within a certain period, depending on the
   context. The default contexts supported by this function are either
-  "confirm", for account confirmation emails, and "reset_password",
+  "confirm", for user confirmation emails, and "reset_password",
   for resetting the password. For verifying requests to change the email,
   see `verify_change_email_token_query/2`.
   """

@@ -1,5 +1,5 @@
 defmodule AccountsManagementAPIWeb.AddressJSON do
-  alias AccountsManagementAPI.Users.Address
+  alias AccountsManagementAPI.Accounts.Address
 
   @doc """
   Renders a list of addresses.
@@ -27,7 +27,7 @@ defmodule AccountsManagementAPIWeb.AddressJSON do
       country_code: address.country_code,
       zip_code: address.zip_code,
       default: address.default,
-      account_id: address.account_id
+      user_id: address.user_id
     }
   end
 end

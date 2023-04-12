@@ -1,4 +1,4 @@
-defmodule AccountsManagementAPI.Users.Address do
+defmodule AccountsManagementAPI.Accounts.Address do
   @moduledoc false
 
   use Ecto.Schema
@@ -7,7 +7,7 @@ defmodule AccountsManagementAPI.Users.Address do
   import Ecto.Query
 
   alias AccountsManagementAPI.Repo
-  alias AccountsManagementAPI.Users.Address
+  alias AccountsManagementAPI.Accounts.Address
 
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
@@ -22,13 +22,13 @@ defmodule AccountsManagementAPI.Users.Address do
     field(:zip_code, :string)
     field(:default, :boolean, default: false)
 
-    belongs_to(:account, AccountsManagementAPI.Users.Account)
+    belongs_to(:user, AccountsManagementAPI.Accounts.User)
 
     timestamps()
   end
 
   @optional ~w(line_2 default)a
-  @required ~w( account_id type name line_1 city state country_code zip_code)a
+  @required ~w(user_id type name line_1 city state country_code zip_code)a
 
   @doc false
   def changeset(address, attrs) do
@@ -37,25 +37,25 @@ defmodule AccountsManagementAPI.Users.Address do
     |> validate_inclusion(:type, ~w(personal business))
     |> validate_inclusion(:country_code, ~w(US BR AR))
     |> validate_required(@required)
-    |> unique_constraint([:name, :account_id], name: :addresses_name_account_id_index)
+    |> unique_constraint([:name, :user_id], name: :addresses_name_user_id_index)
   end
 
   @doc """
-  Sets an unique default address for an account.
+  Sets an unique default address for an user.
 
   ## Examples
 
-      iex> "e6bc1093-2d73-4d0e-b1fe-b7b538fe60f1" |> Users.get_address |> set_default()
+      iex> "e6bc1093-2d73-4d0e-b1fe-b7b538fe60f1" |> Accounts.get_address |> set_default()
       {:ok, %Address{}}
 
       iex> set_default(address)
       {:error, reason}
   """
-  def set_default(%Address{account_id: account_id, id: id}) do
+  def set_default(%Address{user_id: user_id, id: id}) do
     Ecto.Multi.new()
     |> Ecto.Multi.update_all(
       :unset_default,
-      Address |> where(account_id: ^account_id),
+      Address |> where(user_id: ^user_id),
       [set: [default: false]],
       []
     )

@@ -1,6 +1,8 @@
 defmodule AccountsManagementAPI.Accounts.User do
   @moduledoc false
 
+  alias AccountsManagementAPI.Accounts.{Phone, Address}
+
   use Ecto.Schema
   import Ecto.Changeset
   @primary_key {:id, :binary_id, autogenerate: true}
@@ -11,8 +13,21 @@ defmodule AccountsManagementAPI.Accounts.User do
     field :hashed_password, :string, redact: true
     field :confirmed_at, :naive_datetime
 
+    field(:last_name, :string)
+    field(:locale, :string)
+    field(:name, :string)
+    field(:picture, :string)
+    field(:start_date, :naive_datetime)
+    field(:status, :string)
+
+    has_many(:addresses, Address, on_delete: :delete_all)
+    has_many(:phones, Phone, on_delete: :delete_all)
+
     timestamps()
   end
+
+  @optional ~w(name last_name locale status picture confirmed_at start_date)a
+  @required ~w(email password)a
 
   @doc """
   A user changeset for registration.
@@ -39,7 +54,9 @@ defmodule AccountsManagementAPI.Accounts.User do
   """
   def registration_changeset(user, attrs, opts \\ []) do
     user
-    |> cast(attrs, [:email, :password])
+    |> cast(attrs, @required ++ @optional)
+    |> validate_inclusion(:status, ~w(pending active inactive))
+    |> validate_inclusion(:locale, ~w(en es pt))
     |> validate_email(opts)
     |> validate_password(opts)
   end
@@ -125,7 +142,7 @@ defmodule AccountsManagementAPI.Accounts.User do
   end
 
   @doc """
-  Confirms the account by setting `confirmed_at`.
+  Confirms the user by setting `confirmed_at`.
   """
   def confirm_changeset(user) do
     now = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)

@@ -56,7 +56,7 @@ defmodule AccountsManagementAPIWeb.UserResetPasswordLive do
   end
 
   # Do not log in the user after reset password to avoid a
-  # leaked token giving the user access to the account.
+  # leaked token giving the user access to the user.
   def handle_event("reset_password", %{"user" => user_params}, socket) do
     case Accounts.reset_user_password(socket.assigns.user, user_params) do
       {:ok, _} ->

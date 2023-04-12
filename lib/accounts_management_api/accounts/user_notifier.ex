@@ -20,7 +20,7 @@ defmodule AccountsManagementAPI.Accounts.UserNotifier do
   end
 
   @doc """
-  Deliver instructions to confirm account.
+  Deliver instructions to confirm user.
   """
   def deliver_confirmation_instructions(user, url) do
     deliver(user.email, "Confirmation instructions", """
@@ -29,11 +29,11 @@ defmodule AccountsManagementAPI.Accounts.UserNotifier do
 
     Hi #{user.email},
 
-    You can confirm your account by visiting the URL below:
+    You can confirm your user by visiting the URL below:
 
     #{url}
 
-    If you didn't create an account with us, please ignore this.
+    If you didn't create an user with us, please ignore this.
 
     ==============================
     """)

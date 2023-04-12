@@ -5,14 +5,13 @@ defmodule AccountsManagementAPI.Test.Factories do
 
   use ExMachina.Ecto, repo: AccountsManagementAPI.Repo
 
-  alias AccountsManagementAPI.Users.Account
+  alias AccountsManagementAPI.Accounts.{User, Address, Phone}
 
-  def account_factory do
-    %Account{
+  def user_factory do
+    %User{
       email: Faker.Internet.email(),
       password: Faker.Internet.slug(),
-      password_hash: Faker.Internet.slug() |> Argon2.hash_pwd_salt(),
-      email_verified: true,
+      hashed_password: Faker.Internet.slug() |> Argon2.hash_pwd_salt(),
       name: Faker.Person.first_name(),
       last_name: Faker.Person.last_name(),
       confirmed_at: DateTime.utc_now(),
@@ -24,7 +23,7 @@ defmodule AccountsManagementAPI.Test.Factories do
   end
 
   def address_factory do
-    %AccountsManagementAPI.Users.Address{
+    %Address{
       type: "personal",
       name: Faker.Internet.slug(),
       line_1: Faker.Address.street_address(),
@@ -33,18 +32,25 @@ defmodule AccountsManagementAPI.Test.Factories do
       country_code: Faker.Address.country_code(),
       zip_code: Faker.Address.postcode(),
       default: true,
-      account: build(:account)
+      user: build(:user)
     }
   end
 
   def phone_factory do
-    %AccountsManagementAPI.Users.Phone{
+    %Phone{
       type: "personal",
       name: Faker.Internet.slug(),
       number: Faker.Phone.EnUs.phone(),
       default: true,
       verified: false,
-      account: build(:account)
+      user: build(:user)
     }
+  end
+
+  # TODO: not here
+  def extract_user_token(fun) do
+    {:ok, captured_email} = fun.(&"[TOKEN]#{&1}[TOKEN]")
+    [_, token | _] = String.split(captured_email.text_body, "[TOKEN]")
+    token
   end
 end

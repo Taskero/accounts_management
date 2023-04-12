@@ -4,9 +4,9 @@ defmodule AccountsManagementAPI.Accounts do
   """
 
   import Ecto.Query, warn: false
-  alias AccountsManagementAPI.Repo
 
-  alias AccountsManagementAPI.Accounts.{User, UserToken, UserNotifier}
+  alias AccountsManagementAPI.Repo
+  alias AccountsManagementAPI.Accounts.{User, UserToken, UserNotifier, Address, Phone}
 
   ## Database getters
 
@@ -270,7 +270,7 @@ defmodule AccountsManagementAPI.Accounts do
   @doc """
   Confirms a user by the given token.
 
-  If the token matches, the user account is marked as confirmed
+  If the token matches, the user user is marked as confirmed
   and the token is deleted.
   """
   def confirm_user(token) do
@@ -312,10 +312,10 @@ defmodule AccountsManagementAPI.Accounts do
 
   ## Examples
 
-      iex> get_user_by_reset_password_token("validtoken")
+      iex> get_user_by_reset_password_token("valid-token")
       %User{}
 
-      iex> get_user_by_reset_password_token("invalidtoken")
+      iex> get_user_by_reset_password_token("invalid-token")
       nil
 
   """
@@ -349,5 +349,393 @@ defmodule AccountsManagementAPI.Accounts do
       {:ok, %{user: user}} -> {:ok, user}
       {:error, :user, changeset, _} -> {:error, changeset}
     end
+  end
+
+  ########### Addresses ###########
+
+  @doc """
+  Gets a single address, including the parent user.
+
+  ## Examples
+
+      iex> get_address("51391cdc-a7e8-467e-8ef5-ae62aef52fc0")
+      {:ok, %Address{}}
+
+      iex> get_address("910afada-d4b1-4b03-994d-4d80af4f4c64")
+      {:error, :not_found}
+
+  """
+  def get_address(id) do
+    case Address |> Repo.get(id) |> Repo.preload(:user) do
+      nil -> {:error, :not_found}
+      result -> {:ok, result}
+    end
+  end
+
+  @doc """
+  Creates a address.
+
+  ## Examples
+
+      iex> create_address(%{field: value})
+      {:ok, %User{}}
+
+      iex> create_address(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_address(%{"user_id" => user_id} = attrs) do
+    attrs =
+      if from(a in Address, where: a.user_id == ^user_id) |> Repo.exists?(),
+        do: attrs,
+        else: Map.put(attrs, "default", true)
+
+    %Address{}
+    |> Address.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  def create_address(_),
+    do:
+      {:error,
+       %Address{}
+       |> Ecto.Changeset.change(%{})
+       |> Ecto.Changeset.add_error(:user_id, "is required")}
+
+  @doc """
+  Updates a address.
+
+  ## Examples
+
+  iex> update_address(address, %{field: new_value})
+  {:ok, %Address{}}
+
+  iex> update_address(address, %{field: bad_value})
+  {:error, %Ecto.Changeset{}}
+
+  """
+  def update_address(%Address{default: true} = address, attrs) do
+    with {:ok, _} <- Address.set_default(address) do
+      address
+      |> Address.changeset(attrs)
+      |> Repo.update()
+    end
+  end
+
+  def update_address(%Address{} = address, attrs) do
+    address
+    |> Address.changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Deletes a address.
+
+  ## Examples
+
+      iex> delete_address(address)
+      {:ok, %Address{}}
+
+      iex> delete_address(address)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def delete_address(%Address{user_id: user_id} = address) do
+    ids =
+      from(a in Address,
+        where: a.user_id == ^user_id,
+        select: a.id
+      )
+      |> Repo.all()
+
+    do_address_delete(address, ids)
+  end
+
+  defp do_address_delete(_, ids) when ids |> length <= 1,
+    do:
+      {:error,
+       %Address{}
+       |> Ecto.Changeset.change(%{})
+       |> Ecto.Changeset.add_error(:default, "At least one default address is required")}
+
+  defp do_address_delete(address, ids) do
+    with id <- ids |> Enum.find(fn id -> id != address.id end),
+         {:ok, _} <- Address.set_default(%Address{id: id, user_id: address.user_id}) do
+      Repo.delete(address)
+    end
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking address changes.
+
+  ## Examples
+
+      iex> change_address(address)
+      %Ecto.Changeset{data: %Address{}}
+
+  """
+  def change_address(%Address{} = address, attrs \\ %{}) do
+    Address.changeset(address, attrs)
+  end
+
+  ########### Phones ###########
+
+  @doc """
+  Gets a single phone, including the parent user.
+
+  ## Examples
+
+      iex> get_phone("51391cdc-a7e8-467e-8ef5-ae62aef52fc0")
+      {:ok, %Phone{}}
+
+      iex> get_phone("910afada-d4b1-4b03-994d-4d80af4f4c64")
+      {:error, :not_found}
+
+  """
+  def get_phone(id) do
+    case Phone |> Repo.get(id) |> Repo.preload(:user) do
+      nil -> {:error, :not_found}
+      result -> {:ok, result}
+    end
+  end
+
+  @doc """
+  Creates a phone.
+
+  ## Examples
+
+      iex> create_phone(%{field: value})
+      {:ok, %User{}}
+
+      iex> create_phone(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_phone(%{"user_id" => user_id} = attrs) do
+    attrs = Map.put(attrs, "verified", false)
+
+    attrs =
+      if from(a in Phone, where: a.user_id == ^user_id) |> Repo.exists?(),
+        do: attrs,
+        else: Map.put(attrs, "default", true)
+
+    %Phone{}
+    |> Phone.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  def create_phone(_),
+    do:
+      {:error,
+       %Phone{}
+       |> Ecto.Changeset.change(%{})
+       |> Ecto.Changeset.add_error(:user_id, "is required")}
+
+  @doc """
+  Updates a phone.
+
+  ## Examples
+
+  iex> update_phone(phone, %{field: new_value})
+  {:ok, %Phone{}}
+
+  iex> update_phone(phone, %{field: bad_value})
+  {:error, %Ecto.Changeset{}}
+
+  """
+  def update_phone(%Phone{default: true} = phone, attrs) do
+    attrs = Map.put(attrs, "verified", false)
+
+    with {:ok, _} <- Phone.set_default(phone) do
+      phone
+      |> Phone.changeset(attrs)
+      |> Repo.update()
+    end
+  end
+
+  def update_phone(%Phone{} = phone, attrs) do
+    phone
+    |> Phone.changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Deletes a phone.
+
+  ## Examples
+
+      iex> delete_phone(phone)
+      {:ok, %Phone{}}
+
+      iex> delete_phone(phone)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def delete_phone(%Phone{user_id: user_id} = phone) do
+    ids =
+      from(a in Phone,
+        where: a.user_id == ^user_id,
+        select: a.id
+      )
+      |> Repo.all()
+
+    do_phone_delete(phone, ids)
+  end
+
+  defp do_phone_delete(_, ids) when ids |> length <= 1,
+    do:
+      {:error,
+       %Phone{}
+       |> Ecto.Changeset.change(%{})
+       |> Ecto.Changeset.add_error(:default, "At least one default phone is required")}
+
+  defp do_phone_delete(phone, ids) do
+    with id <- ids |> Enum.find(fn id -> id != phone.id end),
+         {:ok, _} <- Phone.set_default(%Phone{id: id, user_id: phone.user_id}) do
+      Repo.delete(phone)
+    end
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking phone changes.
+
+  ## Examples
+
+      iex> change_phone(phone)
+      %Ecto.Changeset{data: %Phone{}}
+
+  """
+  def change_phone(%Phone{} = phone, attrs \\ %{}) do
+    Phone.changeset(phone, attrs)
+  end
+
+  ########### Users ###########
+
+  @doc """
+
+      ## Examples
+
+      iex>  UsersManagementAPI.Users.list_users()
+      [%UsersManagementAPI.Users.User{}]
+
+  """
+  def list_users() do
+    from(a in User,
+      left_join: adr in assoc(a, :addresses),
+      left_join: p in assoc(a, :phones),
+      preload: [:addresses, :phones]
+    )
+    |> Repo.all()
+  end
+
+  def list_users(opts) do
+    query =
+      from(a in User,
+        left_join: adr in assoc(a, :addresses),
+        left_join: p in assoc(a, :phones),
+        preload: [:addresses, :phones]
+      )
+
+    opts
+    |> Enum.reduce(query, fn filter, query ->
+      query |> filter_query([filter])
+    end)
+    |> Repo.all()
+  end
+
+  defp filter_query(query, id: id) do
+    query |> where([a], a.id == ^id)
+  end
+
+  defp filter_query(query, email: email) do
+    query |> where([a], a.email == ^email)
+  end
+
+  defp filter_query(query, _), do: query
+
+  @doc """
+  Gets a single user.
+
+  ## Examples
+
+      iex> get_user("ebfbb184-06f6-4819-812a-3e242bdb42d3")
+      {:ok, %User{}}
+
+      iex> get_user("9b65193c-2293-4809-9d34-06a12ba3ddcf")
+      {:error, :not_found}
+
+  """
+  def get_user(id) do
+    case User |> Repo.get(id) |> Repo.preload([:addresses, :phones]) do
+      nil -> {:error, :not_found}
+      result -> {:ok, result}
+    end
+  end
+
+  @doc """
+  Creates a user.
+
+  ## Examples
+
+      iex> create_user(%{field: value})
+      {:ok, %User{}}
+
+      iex> create_user(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_user(attrs \\ %{}) do
+    attrs = Map.put(attrs, "status", "pending")
+
+    %User{}
+    |> change_user(attrs)
+    |> Repo.insert()
+  end
+
+  @doc """
+  Updates a user.
+
+  ## Examples
+
+  iex> update_user(user, %{field: new_value})
+  {:ok, %User{}}
+
+  iex> update_user(user, %{field: bad_value})
+  {:error, %Ecto.Changeset{}}
+
+  """
+  def update_user(%User{} = user, attrs) do
+    user
+    |> change_user_registration(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Deletes a user.
+
+  ## Examples
+
+      iex> delete_user(user)
+      {:ok, %User{}}
+
+      iex> delete_user(user)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def delete_user(%User{} = user) do
+    Repo.delete(user)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking user changes.
+
+  ## Examples
+
+      iex> change_user(user)
+      %Ecto.Changeset{data: %User{}}
+
+  """
+  def change_user(%User{} = user, attrs \\ %{}) do
+    User.registration_changeset(user, attrs)
   end
 end

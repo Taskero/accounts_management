@@ -10,13 +10,13 @@ defmodule AccountsManagementAPIWeb.UserLoginLive do
     ~H"""
     <div class="mx-auto max-w-sm">
       <.header class="text-center">
-        Sign in to account
+        Sign in to user
         <:subtitle>
-          Don't have an account?
+          Don't have an user?
           <.link navigate={@register_url} class="font-semibold text-brand hover:underline">
             Sign up
           </.link>
-          for an account now.
+          for an user now.
         </:subtitle>
       </.header>
 

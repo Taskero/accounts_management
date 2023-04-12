@@ -1,5 +1,5 @@
 defmodule AccountsManagementAPIWeb.PhoneJSON do
-  alias AccountsManagementAPI.Users.Phone
+  alias AccountsManagementAPI.Accounts.Phone
 
   @doc """
   Renders a list of phones.
@@ -23,7 +23,7 @@ defmodule AccountsManagementAPIWeb.PhoneJSON do
       number: phone.number,
       default: phone.default,
       verified: phone.verified,
-      account_id: phone.account_id
+      user_id: phone.user_id
     }
   end
 end

@@ -6,7 +6,7 @@ defmodule AccountsManagementAPIWeb.Auth.AuthHelper do
 
   use AccountsManagementAPIWeb.ConnCase
 
-  alias AccountsManagementAPI.Users.Account
+  alias AccountsManagementAPI.Accounts.User
   alias AccountsManagementAPIWeb.Auth.Guardian
 
   @doc """
@@ -14,7 +14,7 @@ defmodule AccountsManagementAPIWeb.Auth.AuthHelper do
 
   ## Examples
 
-    iex> conn |> AuthHelper.with_valid_authorization_header(account_id)
+    iex> conn |> AuthHelper.with_valid_authorization_header(user_id)
     conn
     iex> conn |> AuthHelper.with_valid_authorization_header()
     conn
@@ -32,22 +32,22 @@ defmodule AccountsManagementAPIWeb.Auth.AuthHelper do
   """
   def with_valid_authorization_header(
         conn,
-        account_id \\ "e281da89-3fa0-4487-9064-911ba0e83f1c"
+        user_id \\ "e281da89-3fa0-4487-9064-911ba0e83f1c"
       ) do
-    conn |> create_with_valid_authorization_header(%Account{id: account_id})
+    conn |> create_with_valid_authorization_header(%User{id: user_id})
   end
 
-  defp create_with_valid_authorization_header(conn, account) do
-    {:ok, token, _} = account |> Guardian.encode_and_sign(%{})
+  defp create_with_valid_authorization_header(conn, user) do
+    {:ok, token, _} = user |> Guardian.encode_and_sign(%{})
 
     conn
     |> put_req_header("authorization", "Bearer " <> token)
     |> put_req_header("accept", "application/json")
   end
 
-  def new_conn(account_id) do
+  def new_conn(user_id) do
     build_conn()
     |> put_req_header("accept", "application/json")
-    |> with_valid_authorization_header(account_id)
+    |> with_valid_authorization_header(user_id)
   end
 end

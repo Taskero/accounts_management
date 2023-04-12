@@ -11,8 +11,8 @@ defmodule AccountsManagementAPIWeb.UserSettingsLive do
   def render(assigns) do
     ~H"""
     <.header class="text-center">
-      Account Settings
-      <:subtitle>Manage your account email address and password settings</:subtitle>
+      User Settings
+      <:subtitle>Manage your user email address and password settings</:subtitle>
     </.header>
 
     <div class="space-y-12 divide-y">

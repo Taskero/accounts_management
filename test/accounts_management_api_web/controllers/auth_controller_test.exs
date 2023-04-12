@@ -8,24 +8,23 @@ defmodule AccountManagementAPIWeb.AuthControllerTest do
   @valid_pass "QWERTY123!!asdfgh"
 
   setup %{conn: conn} do
-    account =
-      insert(:account,
+    user =
+      insert(:user,
         email: "john_wick@gmail.com",
-        password: @valid_pass,
-        password_hash: @valid_pass |> Argon2.hash_pwd_salt()
+        password: @valid_pass
       )
 
     conn =
       conn
       |> put_req_header("accept", "application/json")
-      |> AuthHelper.with_valid_authorization_header(account.id)
+      |> AuthHelper.with_valid_authorization_header(user.id)
 
-    {:ok, account: account, conn: conn}
+    {:ok, user: user, conn: conn}
   end
 
   describe "post /api/auth" do
     test "with valid user and password key generate JWT", %{
-      account: account,
+      user: user,
       conn: conn
     } do
       body =
@@ -41,18 +40,18 @@ defmodule AccountManagementAPIWeb.AuthControllerTest do
 
       %{
         "access_token" => jwt,
-        "account_id" => account_id,
+        "user_id" => user_id,
         "expires_in" => exp,
         "token_type" => "Bearer"
       } = json_response(conn, 201)
 
-      assert account_id == account.id
+      assert user_id == user.id
       assert exp > DateTime.utc_now() |> DateTime.to_unix()
 
       assert {:ok,
               %{
                 "exp" => ^exp,
-                "sub" => ^account_id
+                "sub" => ^user_id
               }} = jwt |> Guardian.decode_and_verify()
     end
 
@@ -89,7 +88,7 @@ defmodule AccountManagementAPIWeb.AuthControllerTest do
 
   describe "post /api/auth/refresh" do
     test "with valid  JWT", %{
-      account: account,
+      user: user,
       conn: conn
     } do
       old_jwt =
@@ -99,25 +98,25 @@ defmodule AccountManagementAPIWeb.AuthControllerTest do
 
       %{
         "access_token" => jwt,
-        "account_id" => account_id,
+        "user_id" => user_id,
         "expires_in" => exp,
         "token_type" => "Bearer"
       } = json_response(conn, 201)
 
-      assert account_id == account.id
+      assert user_id == user.id
       assert old_jwt != jwt
       assert exp > DateTime.utc_now() |> DateTime.to_unix()
 
       assert {:ok,
               %{
                 "exp" => ^exp,
-                "sub" => ^account_id
+                "sub" => ^user_id
               }} = jwt |> Guardian.decode_and_verify()
     end
 
-    test "with expired JWT return error", %{account: account} do
+    test "with expired JWT return error", %{user: user} do
       {:ok, expired_jwt, _} =
-        Guardian.encode_and_sign(account, %{
+        Guardian.encode_and_sign(user, %{
           "exp" => DateTime.utc_now() |> DateTime.add(-10) |> DateTime.to_unix()
         })
 

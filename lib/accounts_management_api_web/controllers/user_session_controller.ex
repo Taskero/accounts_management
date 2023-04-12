@@ -5,7 +5,7 @@ defmodule AccountsManagementAPIWeb.UserSessionController do
   alias AccountsManagementAPIWeb.UserAuth
 
   def create(conn, %{"_action" => "registered"} = params) do
-    create(conn, params, "Account created successfully!")
+    create(conn, params, "User created successfully!")
   end
 
   def create(conn, %{"_action" => "password_updated"} = params) do

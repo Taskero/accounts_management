@@ -5,18 +5,20 @@ defmodule AccountsManagementAPIWeb.UserRegistrationLive do
   alias AccountsManagementAPI.Accounts.User
 
   attr :confirm_url, :string, default: "/users/confirm/"
+  attr :login_url, :string, default: "/users/log_in/"
+  attr :login_registered_url, :string, default: "/users/log_in?_action=registered"
 
   def render(assigns) do
     ~H"""
     <div class="mx-auto max-w-sm">
       <.header class="text-center">
-        Register for an account
+        Register for an user
         <:subtitle>
           Already registered?
-          <.link navigate={~p"/users/log_in"} class="font-semibold text-brand hover:underline">
+          <.link navigate={@login_url} class="font-semibold text-brand hover:underline">
             Sign in
           </.link>
-          to your account now.
+          to your user now.
         </:subtitle>
       </.header>
 
@@ -26,7 +28,7 @@ defmodule AccountsManagementAPIWeb.UserRegistrationLive do
         phx-submit="save"
         phx-change="validate"
         phx-trigger-action={@trigger_submit}
-        action={~p"/users/log_in?_action=registered"}
+        action={@login_registered_url}
         method="post"
       >
         <.error :if={@check_errors}>
@@ -37,7 +39,7 @@ defmodule AccountsManagementAPIWeb.UserRegistrationLive do
         <.input field={@form[:password]} type="password" label="Password" required />
 
         <:actions>
-          <.button phx-disable-with="Creating account..." class="w-full">Create an account</.button>
+          <.button phx-disable-with="Creating user..." class="w-full">Create an user</.button>
         </:actions>
       </.simple_form>
     </div>

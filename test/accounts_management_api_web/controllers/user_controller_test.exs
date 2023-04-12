@@ -4,14 +4,13 @@ defmodule AccountsManagementAPIWeb.AccountControllerTest do
   import AccountsManagementAPI.Test.Factories
 
   alias AccountsManagementAPIWeb.Auth.AuthHelper
-  alias AccountsManagementAPI.Users.Account
+  alias AccountsManagementAPI.Accounts.User
 
-  doctest AccountsManagementAPIWeb.AccountController
+  doctest AccountsManagementAPIWeb.UserController
 
   @invalid_attrs %{
     confirmed_at: nil,
     email: nil,
-    email_verified: nil,
     last_name: nil,
     locale: nil,
     name: nil,
@@ -22,29 +21,29 @@ defmodule AccountsManagementAPIWeb.AccountControllerTest do
   }
 
   setup %{conn: conn} do
-    account = insert(:account)
+    user = insert(:user)
 
     conn =
       conn
       |> put_req_header("accept", "application/json")
-      |> AuthHelper.with_valid_authorization_header(account.id)
+      |> AuthHelper.with_valid_authorization_header(user.id)
 
-    {:ok, conn: conn, account: account}
+    {:ok, conn: conn, user: user}
   end
 
   describe "index" do
     test "lists all accounts", %{conn: conn} do
-      conn = get(conn, ~p"/api/accounts")
+      conn = get(conn, ~p"/api/users")
       assert json_response(conn, 200)["data"] |> length == 1
     end
   end
 
-  describe "create account" do
-    test "renders account when data is valid", %{conn: conn} do
+  describe "create user" do
+    test "renders user when data is valid", %{conn: conn} do
       body =
         """
         {
-          "account": {
+          "user": {
               "email": "jwick@gmail.com",
               "password": "Cool!Password",
               "name": "John",
@@ -55,19 +54,18 @@ defmodule AccountsManagementAPIWeb.AccountControllerTest do
         """
         |> Jason.decode!()
 
-      conn = post(conn, ~p"/api/accounts", body)
+      conn = post(conn, ~p"/api/users", body)
       assert %{"id" => id} = json_response(conn, 201)["data"]
 
       conn =
         build_conn()
         |> AuthHelper.with_valid_authorization_header(id)
-        |> get(~p"/api/accounts/#{id}")
+        |> get(~p"/api/users/#{id}")
 
       assert %{
                "id" => ^id,
                "confirmed_at" => nil,
                "email" => "jwick@gmail.com",
-               "email_verified" => false,
                "last_name" => "Wick",
                "locale" => "es",
                "name" => "John",
@@ -78,7 +76,7 @@ defmodule AccountsManagementAPIWeb.AccountControllerTest do
     end
 
     test "renders errors when data is invalid", %{conn: conn} do
-      conn = post(conn, ~p"/api/accounts", account: @invalid_attrs)
+      conn = post(conn, ~p"/api/users", user: @invalid_attrs)
       assert json_response(conn, 422)["errors"] != %{}
     end
 
@@ -86,7 +84,7 @@ defmodule AccountsManagementAPIWeb.AccountControllerTest do
       body =
         """
         {
-          "account": {
+          "user": {
               "email": "jwick.com",
               "password": "Cool!Password",
               "name": "John",
@@ -97,7 +95,7 @@ defmodule AccountsManagementAPIWeb.AccountControllerTest do
         """
         |> Jason.decode!()
 
-      conn = post(conn, ~p"/api/accounts", body)
+      conn = post(conn, ~p"/api/users", body)
       assert %{"email" => ["is not valid"]} = json_response(conn, 422)["errors"]
     end
 
@@ -105,7 +103,7 @@ defmodule AccountsManagementAPIWeb.AccountControllerTest do
       body =
         """
         {
-          "account": {
+          "user": {
               "email": "jwick@gmail.com",
               "password": "short",
               "name": "John",
@@ -116,7 +114,7 @@ defmodule AccountsManagementAPIWeb.AccountControllerTest do
         """
         |> Jason.decode!()
 
-      conn = post(conn, ~p"/api/accounts", body)
+      conn = post(conn, ~p"/api/users", body)
 
       assert %{
                "password" => [
@@ -129,7 +127,7 @@ defmodule AccountsManagementAPIWeb.AccountControllerTest do
       body =
         """
         {
-          "account": {
+          "user": {
               "email": "jwick@gmail.com",
               "password": "short123sss12312312",
               "name": "John",
@@ -140,7 +138,7 @@ defmodule AccountsManagementAPIWeb.AccountControllerTest do
         """
         |> Jason.decode!()
 
-      conn = post(conn, ~p"/api/accounts", body)
+      conn = post(conn, ~p"/api/users", body)
 
       assert %{
                "password" => [
@@ -150,14 +148,14 @@ defmodule AccountsManagementAPIWeb.AccountControllerTest do
     end
   end
 
-  describe "update account" do
+  describe "update user" do
     setup [:create_account]
 
-    test "renders account when data is valid", %{conn: conn, account: %Account{id: id} = account} do
+    test "renders user when data is valid", %{conn: conn, user: %User{id: id} = user} do
       body =
         """
         {
-          "account": {
+          "user": {
               "email": "john_wick@gmail.com",
               "locale": "en"
           }
@@ -165,15 +163,15 @@ defmodule AccountsManagementAPIWeb.AccountControllerTest do
         """
         |> Jason.decode!()
 
-      conn = put(conn, ~p"/api/accounts/#{account}", body)
+      conn = put(conn, ~p"/api/users/#{user}", body)
       assert %{"id" => ^id} = json_response(conn, 200)["data"]
 
       conn =
         build_conn()
-        |> AuthHelper.with_valid_authorization_header(account.id)
-        |> get(~p"/api/accounts/#{id}")
+        |> AuthHelper.with_valid_authorization_header(user.id)
+        |> get(~p"/api/users/#{id}")
 
-      insert(:account)
+      insert(:user)
 
       %{
         "id" => ^id,
@@ -185,31 +183,31 @@ defmodule AccountsManagementAPIWeb.AccountControllerTest do
       assert locale == "en"
     end
 
-    test "renders errors when data is invalid", %{conn: conn, account: account} do
-      conn = put(conn, ~p"/api/accounts/#{account}", account: @invalid_attrs)
+    test "renders errors when data is invalid", %{conn: conn, user: user} do
+      conn = put(conn, ~p"/api/users/#{user}", user: @invalid_attrs)
       assert json_response(conn, 422)["errors"] != %{}
     end
   end
 
-  describe "delete account" do
+  describe "delete user" do
     setup [:create_account]
 
-    test "deletes chosen account", %{conn: conn, account: account} do
-      conn = delete(conn, ~p"/api/accounts/#{account}")
+    test "deletes chosen user", %{conn: conn, user: user} do
+      conn = delete(conn, ~p"/api/users/#{user}")
       assert response(conn, 204)
 
       conn =
         build_conn()
-        |> AuthHelper.with_valid_authorization_header(account.id)
-        |> get(~p"/api/accounts/#{account}")
+        |> AuthHelper.with_valid_authorization_header(user.id)
+        |> get(~p"/api/users/#{user}")
 
       assert response(conn, 404)
     end
   end
 
   defp create_account(_) do
-    account = insert(:account)
+    user = insert(:user)
 
-    %{account: account}
+    %{user: user}
   end
 end

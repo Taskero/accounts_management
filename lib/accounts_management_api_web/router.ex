@@ -18,14 +18,14 @@ defmodule AccountsManagementAPIWeb.Router do
     resources "/auth", AuthController, only: [:create]
     resources "/auth/refresh", AuthController, only: [:create]
 
-    resources "/accounts", AccountController, only: [:create]
+    resources "/users", UserController, only: [:create]
   end
 
   # Secure routes
   scope "/api", AccountsManagementAPIWeb do
     pipe_through [:api, :auth]
 
-    resources "/accounts", AccountController, only: [:index, :show, :update, :delete] do
+    resources "/users", UserController, only: [:index, :show, :update, :delete] do
       resources("/addresses", AddressController, only: [:index, :create, :show, :update, :delete])
       resources("/phones", PhoneController, only: [:index, :create, :show, :update, :delete])
     end
