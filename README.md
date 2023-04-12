@@ -116,7 +116,7 @@ flyctl auth login
 flyctl launch
 
 # ? Choose an app name (leave blank to generate one): accounts-management-api
-# ? Select Organization: taskero (taskero)
+# ? Select Organization: AccountsManagementAPI (AccountsManagementAPI)
 # ? Choose a region for deployment: Sao Paulo, Brazil (gru)
 # Admin URL: https://fly.io/apps/accounts-management-api
 # Hostname: accounts-management-api.fly.dev
