@@ -11,7 +11,8 @@ defmodule AccountManagementAPIWeb.AuthControllerTest do
     user =
       insert(:user,
         email: "john_wick@gmail.com",
-        password: @valid_pass
+        password: @valid_pass,
+        password_hash: @valid_pass |> Bcrypt.hash_pwd_salt()
       )
 
     conn =

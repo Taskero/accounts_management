@@ -46,6 +46,7 @@ defmodule AccountsManagementAPIWeb.AccountControllerTest do
           "user": {
               "email": "jwick@gmail.com",
               "password": "Cool!Password",
+              "password_confirmation": "Cool!Password",
               "name": "John",
               "last_name": "Wick",
               "locale": "es"

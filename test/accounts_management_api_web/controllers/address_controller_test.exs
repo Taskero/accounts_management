@@ -114,8 +114,8 @@ defmodule AccountsManagementAPIWeb.AddressControllerTest do
              } == json_response(conn, 200)["data"]
     end
 
-    test "renders errors when data is invalid", %{conn: conn, user: user} do
-      conn = put(conn, ~p"/api/users/#{user}", user: @invalid_attrs)
+    test "renders errors when data is invalid", %{conn: conn, user: user, address: address} do
+      conn = put(conn, ~p"/api/users/#{user}/addresses/#{address}", address: @invalid_attrs)
       assert json_response(conn, 422)["errors"] != %{}
     end
   end

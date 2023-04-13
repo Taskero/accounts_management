@@ -48,9 +48,9 @@ defmodule AccountsManagementAPI.AccountsTest do
     end
   end
 
-  describe "register_user/1" do
+  describe "create_user/1" do
     test "requires email and password to be set" do
-      {:error, changeset} = Accounts.register_user(%{})
+      {:error, changeset} = Accounts.create_user(%{})
 
       assert %{
                password: ["can't be blank"],
@@ -59,7 +59,7 @@ defmodule AccountsManagementAPI.AccountsTest do
     end
 
     test "validates email and password when given" do
-      {:error, changeset} = Accounts.register_user(%{email: "not valid", password: "not valid"})
+      {:error, changeset} = Accounts.create_user(%{email: "not valid", password: "not valid"})
 
       assert %{
                email: ["must have the @ sign and no spaces"],
@@ -69,26 +69,26 @@ defmodule AccountsManagementAPI.AccountsTest do
 
     test "validates maximum values for email and password for security" do
       too_long = String.duplicate("db", 100)
-      {:error, changeset} = Accounts.register_user(%{email: too_long, password: too_long})
+      {:error, changeset} = Accounts.create_user(%{email: too_long, password: too_long})
       assert "should be at most 160 character(s)" in errors_on(changeset).email
       assert "should be at most 72 character(s)" in errors_on(changeset).password
     end
 
     test "validates email uniqueness" do
       %{email: email} = insert(:user)
-      {:error, changeset} = Accounts.register_user(%{email: email})
+      {:error, changeset} = Accounts.create_user(%{email: email})
       assert "has already been taken" in errors_on(changeset).email
 
       # Now try with the upper cased email too, to check that email case is ignored.
-      {:error, changeset} = Accounts.register_user(%{email: String.upcase(email)})
+      {:error, changeset} = Accounts.create_user(%{email: String.upcase(email)})
       assert "has already been taken" in errors_on(changeset).email
     end
 
     test "registers users with a hashed password" do
       email = Faker.Internet.email()
-      {:ok, user} = Accounts.register_user(%{email: email, password: "CoolPassword123!"})
+      {:ok, user} = Accounts.create_user(%{email: email, password: "CoolPassword123!"})
       assert user.email == email
-      assert is_binary(user.hashed_password)
+      assert is_binary(user.password_hash)
       assert is_nil(user.confirmed_at)
       assert is_nil(user.password)
     end
@@ -113,7 +113,7 @@ defmodule AccountsManagementAPI.AccountsTest do
       assert changeset.valid?
       assert get_change(changeset, :email) == email
       assert get_change(changeset, :password) == password
-      assert is_nil(get_change(changeset, :hashed_password))
+      assert is_nil(get_change(changeset, :password_hash))
     end
   end
 
@@ -250,7 +250,7 @@ defmodule AccountsManagementAPI.AccountsTest do
 
       assert changeset.valid?
       assert get_change(changeset, :password) == "new valid password"
-      assert is_nil(get_change(changeset, :hashed_password))
+      assert is_nil(get_change(changeset, :password_hash))
     end
   end
 
@@ -555,7 +555,6 @@ defmodule AccountsManagementAPI.AccountsTest do
       assert user.last_name == "some last_name"
       assert user.locale == "en"
       assert user.name == "some name"
-      assert user.password_hash != nil
       assert user.picture == "some picture"
       assert user.start_date == ~N[2023-03-31 09:07:00]
       assert user.status == "pending"

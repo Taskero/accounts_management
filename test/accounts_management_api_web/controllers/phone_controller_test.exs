@@ -104,8 +104,8 @@ defmodule AccountsManagementAPIWeb.PhoneControllerTest do
              } == json_response(conn, 200)["data"]
     end
 
-    test "renders errors when data is invalid", %{conn: conn, user: user} do
-      conn = put(conn, ~p"/api/users/#{user}", user: @invalid_attrs)
+    test "renders errors when data is invalid", %{conn: conn, user: user, phone: phone} do
+      conn = put(conn, ~p"/api/users/#{user}/phones/#{phone}", phone: @invalid_attrs)
       assert json_response(conn, 422)["errors"] != %{}
     end
   end

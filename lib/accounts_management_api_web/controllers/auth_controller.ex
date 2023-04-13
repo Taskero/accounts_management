@@ -14,8 +14,9 @@ defmodule AccountsManagementAPIWeb.AuthController do
 
   # /api/auth
   def create(conn, %{"email" => email, "password" => pass}) do
-    with {:ok, user} <- seek_user(email),
-         {:ok, _} <- Argon2.check_pass(user, pass),
+    with user <- Accounts.get_user_by_email_and_password(email, pass),
+         # {:ok, user} <- seek_user(email),
+         #      {:ok, _} <- Argon2.check_pass(pass, user.password_hash),
          {:ok, jwt, %{"exp" => exp}} <- user |> Guardian.encode_and_sign(%{}) do
       conn
       |> put_status(:created)

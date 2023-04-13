@@ -62,23 +62,23 @@ defmodule AccountsManagementAPI.Accounts do
 
   ## User registration
 
-  @doc """
-  Registers a user.
+  # USE `create_user` @doc """
+  # Registers a user.
 
-  ## Examples
+  # ## Examples
 
-      iex> register_user(%{field: value})
-      {:ok, %User{}}
+  #     iex> register_user(%{field: value})
+  #     {:ok, %User{}}
 
-      iex> register_user(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
+  #     iex> register_user(%{field: bad_value})
+  #     {:error, %Ecto.Changeset{}}
 
-  """
-  def register_user(attrs) do
-    %User{}
-    |> User.registration_changeset(attrs)
-    |> Repo.insert()
-  end
+  # """
+  # def register_user(attrs) do
+  #   %User{}
+  #   |> User.registration_changeset(attrs)
+  #   |> Repo.insert()
+  # end
 
   @doc """
   Returns an `%Ecto.Changeset{}` for tracking user changes.
@@ -615,7 +615,7 @@ defmodule AccountsManagementAPI.Accounts do
 
       ## Examples
 
-      iex>  UsersManagementAPI.Users.list_users()
+      iex>  UsersManagementAPI.Accounts.list_users()
       [%UsersManagementAPI.Users.User{}]
 
   """
@@ -686,9 +686,11 @@ defmodule AccountsManagementAPI.Accounts do
   """
   def create_user(attrs \\ %{}) do
     attrs = Map.put(attrs, "status", "pending")
+    # TODO: set in config
+    attrs = Map.put(attrs, "locale", "es")
 
     %User{}
-    |> change_user(attrs)
+    |> User.changeset(attrs)
     |> Repo.insert()
   end
 
@@ -706,7 +708,7 @@ defmodule AccountsManagementAPI.Accounts do
   """
   def update_user(%User{} = user, attrs) do
     user
-    |> change_user_registration(attrs)
+    |> User.changeset(attrs)
     |> Repo.update()
   end
 
