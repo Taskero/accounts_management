@@ -144,7 +144,7 @@ defmodule AccountsManagementAPIWeb.AddressControllerTest do
       conn = delete(conn, ~p"/api/users/#{user}/addresses/#{address}")
       assert response(conn, 204)
 
-      {:ok, address} = Users.get_address(add2.id)
+      {:ok, address} = Accounts.get_address(add2.id)
       assert address.default
     end
 

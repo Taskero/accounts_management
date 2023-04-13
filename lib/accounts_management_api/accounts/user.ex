@@ -188,9 +188,7 @@ defmodule AccountsManagementAPI.Accounts.User do
     |> validate_required(@required)
     |> hash_password()
     |> validate_email_format()
-    |> unique_constraint([:email, :system_identifier],
-      name: :accounts_email_system_identifier_index
-    )
+    |> unique_constraint(:email)
   end
 
   defp hash_password(%Ecto.Changeset{valid?: true, changes: %{password: password}} = changeset) do

@@ -132,6 +132,8 @@ defmodule AccountsManagementAPI.Accounts do
   Updates the user email using the given token.
 
   If the token matches, the user email is updated and the token is deleted.
+  The updated emails is stored at the `sent_to` field of the token.
+
   The confirmed_at date is also updated to the current time.
   """
   def update_user_email(user, token) do
@@ -210,7 +212,7 @@ defmodule AccountsManagementAPI.Accounts do
     |> Ecto.Multi.delete_all(:tokens, UserToken.user_and_contexts_query(user, :all))
     |> Repo.transaction()
     |> case do
-      {:ok, %{user: user}} -> {:ok, user}
+      {:ok, %{user: user}} -> {:ok, %{user | password: nil}}
       {:error, :user, changeset, _} -> {:error, changeset}
     end
   end
@@ -346,7 +348,7 @@ defmodule AccountsManagementAPI.Accounts do
     |> Ecto.Multi.delete_all(:tokens, UserToken.user_and_contexts_query(user, :all))
     |> Repo.transaction()
     |> case do
-      {:ok, %{user: user}} -> {:ok, user}
+      {:ok, %{user: user}} -> {:ok, %{user | password: nil}}
       {:error, :user, changeset, _} -> {:error, changeset}
     end
   end
@@ -685,9 +687,10 @@ defmodule AccountsManagementAPI.Accounts do
 
   """
   def create_user(attrs \\ %{}) do
+    attrs = Map.drop(attrs, ["confirmed_at"])
     attrs = Map.put(attrs, "status", "pending")
     # TODO: set in config
-    attrs = Map.put(attrs, "locale", "es")
+    attrs = Map.merge(%{"locale" => "es"}, attrs)
 
     %User{}
     |> User.changeset(attrs)
