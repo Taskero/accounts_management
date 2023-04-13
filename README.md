@@ -1,6 +1,7 @@
-# Accounts Management SaaS
+# Accounts Management Lib
 
-Manage users accounts, services access SaaS
+Manage users accounts Lib.
+Allow to extract the dependency between app and accounts management.
 
 ## Model
 
@@ -51,82 +52,117 @@ erDiagram
 
 ## Dependencies
 
-tbd
+Not for now
 
-## Running
+## Include in your project
 
 
-```shell
-direnv allow
-mix setup
-mix deps.update --all
-mix test
+`mix.exs`
 
-mix format # format code
-mix credo # like rubocop
-mix coveralls.html # code coverage
-mix deps.audit # libraries vulnerabilities check
-mix sobelow # security static code check
-mix dialyzer # static analysis tool for Erlang
-mix docs # gen doc
+```elixir
+defp deps do
+[
+  # ...
+] ++ internal_deps()
+end
 
-mix phx.server
-open http://localhost:4000/api/users
+defp internal_deps() do
+  [
+    # After dev things
+    # {:accounts_management_api, "~> 0.1.0", git: "https://github.com/Taskero/accounts_management_api.git", branch: "main"},
+    {:accounts_management_api, "~> 0.1.0", path: "../accounts_management_api"}
+  ]
+end
 ```
 
-## Routes
+`config/config.exs`
 
-```shell
-# simplified routes
-mix phx.routes | grep '/api' | awk '{print $2 " " $3}' | sed '/.*Controller/d'
+```elixir
+ import Config
 
-# seed some data
-mix run priv/repo/seeds.exs
+ config :project,
+-  ecto_repos: [Project.Repo],
++  ecto_repos: [Project.Repo, AccountsManagementAPI.Repo],
+
++config :accounts_management_api, AccountsManagementAPIWeb.Endpoint,
++  url: [host: "localhost"],
++  render_errors: [
++    formats: [json: AccountsManagementAPIWeb.ErrorJSON],
++    layout: false
++  ],
++  pubsub_server: AccountsManagementAPI.PubSub,
++  live_view: [signing_salt: "SOMETHING"]
 ```
 
-## Executing with docker
+`config/test.exs`
 
-```sh
-# build:
-docker image build -t accounts_management_api-web .
-# shell:
-docker container run --rm -it --entrypoint "" -p 127.0.0.1:8080:8080  --env-file ./.docker.env accounts_management_api-web sh
-# run:
-docker container run --rm -it -p 127.0.0.1:8080:8080 --name accounts_management_api --env-file ./.docker.env accounts_management_api-web
-# exec:
-docker container exec -it accounts_management_api sh
-# logs:
-docker container logs --follow --tail 100 accounts_management_api
-# compose:
-docker-compose up
+```elixir
++config :accounts_management_api, AccountsManagementAPI.Repo,
++  username: System.get_env("DB_USERNAME"),
++  password: System.get_env("DB_PASSWORD"),
++  hostname: System.get_env("DB_HOSTNAME"),
++  database: "db_test#{System.get_env("MIX_TEST_PARTITION")}",
++  pool: Ecto.Adapters.SQL.Sandbox,
++  pool_size: 10
++
++config :accounts_management_api, AccountsManagementAPIWeb.Auth.Guardian,
++  secret_key: "SECRET_KEY_BASE"
 ```
 
-## Deployment
+`lib/project_web/router.ex` for rest API
 
-### Fly.IO
-
-[Install & Configuration](https://hexdocs.pm/phoenix/fly.html)
-
-#### Client dependency
-
-```sh
-brew install flyctl
-flyctl auth login
-flyctl launch
-
-# ? Choose an app name (leave blank to generate one): accounts-management-api
-# ? Select Organization: AccountsManagementAPI (AccountsManagementAPI)
-# ? Choose a region for deployment: Sao Paulo, Brazil (gru)
-# Admin URL: https://fly.io/apps/users-management-api
-# Hostname: accounts-management-api.fly.dev
-# Set secrets on accounts-management-api: SECRET_KEY_BASE
-# ? Would you like to set up a Postgresql database now? Yes
-# ? Select configuration: Development - Single node, 1x shared CPU, 256MB RAM, 1GB disk
-# https://users-management-api.fly.dev/api/users
-
-fly secrets set MY_SECRET_KEY=my_secret_value
-fly deploy
-fly status
-fly logs
-fly open
+```elixir
++  pipeline :auth do
++    plug AccountsManagementAPIWeb.Auth.Pipeline
++  end
++
++  # API ####################
++
++  # Unsecure routes
++  scope "/api", AccountsManagementAPIWeb do
++    pipe_through :api
++
++    resources "/auth", AuthController, only: [:create]
++    resources "/auth/refresh", AuthController, only: [:create]
++    resources "/users", UserController, only: [:create]
++  end
++
++  # Secure routes
++  scope "/api", AccountsManagementAPIWeb do
++    pipe_through [:api, :auth]
++
++    resources "/users", UserController, only: [:index, :show, :update, :delete] do
++      resources("/addresses", AddressController, only: [:index, :create, :show, :update, :delete])
++      resources("/phones", PhoneController, only: [:index, :create, :show, :update, :delete])
++    end
++  end
 ```
+
+For testing create a [ExMachina Factory](https://github.com/thoughtbot/ex_machina) `/test/support/factories.ex`
+
+```elixir
+defmodule AccountsManagementAPI.Test.Factories do
++  use ExMachina.Ecto, repo: AccountsManagementAPI.Repo
++  alias AccountsManagementAPI.Accounts.{User, Address, Phone}
++
++  def user_factory do ... end
++  def address_factory do ... end
++  def phone_factory do ... end
+end
+```
+
+create the test with:
+
+```elixir
+defmodule ExampleControllerTest do
+  use ProjectWeb.ConnCase
+
+  import AccountsManagementAPI.Test.Factories
+
+  setup do
+    # Explicitly get a connection before each test
+    :ok = Ecto.Adapters.SQL.Sandbox.checkout(AccountsManagementAPI.Repo)
+  end
+```
+
+Happy coding 🐣
