@@ -28,8 +28,8 @@ defmodule AccountsManagementAPIWeb.Auth.Guardian do
   Get the list of organization ids from the claims and return the organizations.
   """
   @spec resource_from_claims(any) :: {:error, :no_sub_provided | :not_found} | {:ok, any}
-  def resource_from_claims(%{"sub" => id, "sysid" => system_identifier}),
-    do: Users.get_account(system_identifier, id)
+  def resource_from_claims(%{"sub" => id}),
+    do: Users.get_account(id)
 
   def resource_from_claims(_), do: {:error, :no_sub_provided}
 end

@@ -9,8 +9,6 @@ defmodule AccountsManagementAPIWeb.AddressControllerTest do
 
   doctest AccountsManagementAPIWeb.AddressController
 
-  @system_identifier "my_cool_system"
-
   @invalid_attrs %{
     type: nil,
     name: nil,
@@ -23,8 +21,8 @@ defmodule AccountsManagementAPIWeb.AddressControllerTest do
     account_id: nil
   }
 
-  setup %{conn: conn} do
-    account = insert(:account, system_identifier: @system_identifier)
+  setup do
+    account = insert(:account)
 
     {:ok, conn: AuthHelper.new_conn(account.id), account: account}
   end
@@ -167,7 +165,7 @@ defmodule AccountsManagementAPIWeb.AddressControllerTest do
   end
 
   defp create_address(_) do
-    account = insert(:account, system_identifier: @system_identifier)
+    account = insert(:account)
     address = insert(:address, account: account)
 
     %{account: account, address: address}

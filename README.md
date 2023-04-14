@@ -19,7 +19,6 @@ erDiagram
         character_varying status
         datetime start_date
         datetime confirmed_at
-        character_varying system_identifier
     }
 
     addresses {

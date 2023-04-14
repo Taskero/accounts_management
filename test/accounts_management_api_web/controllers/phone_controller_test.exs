@@ -9,8 +9,6 @@ defmodule AccountsManagementAPIWeb.PhoneControllerTest do
 
   doctest AccountsManagementAPIWeb.PhoneController
 
-  @system_identifier "my_cool_system"
-
   @invalid_attrs %{
     type: nil,
     name: nil,
@@ -21,12 +19,11 @@ defmodule AccountsManagementAPIWeb.PhoneControllerTest do
   }
 
   setup %{conn: conn} do
-    account = insert(:account, system_identifier: @system_identifier)
+    account = insert(:account)
 
     conn =
       conn
       |> put_req_header("accept", "application/json")
-      |> put_req_header("system-identifier", @system_identifier)
       |> AuthHelper.with_valid_authorization_header(account.id)
 
     {:ok, conn: conn, account: account}
@@ -157,7 +154,7 @@ defmodule AccountsManagementAPIWeb.PhoneControllerTest do
   end
 
   defp create_phone(_) do
-    account = insert(:account, system_identifier: @system_identifier)
+    account = insert(:account)
     phone = insert(:phone, account: account)
 
     %{account: account, phone: phone}

@@ -26,8 +26,7 @@ defmodule AccountsManagementAPIWeb.AccountJSON do
       locale: account.locale,
       status: account.status,
       start_date: account.start_date,
-      confirmed_at: account.confirmed_at,
-      system_identifier: account.system_identifier
+      confirmed_at: account.confirmed_at
     }
   end
 end

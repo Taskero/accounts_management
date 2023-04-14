@@ -9,8 +9,6 @@ defmodule AccountsManagementAPIWeb.Auth.AuthHelper do
   alias AccountsManagementAPI.Users.Account
   alias AccountsManagementAPIWeb.Auth.Guardian
 
-  @system_identifier "my_cool_system"
-
   @doc """
   Add a valid authorization header to the connection.
 
@@ -40,8 +38,7 @@ defmodule AccountsManagementAPIWeb.Auth.AuthHelper do
   end
 
   defp create_with_valid_authorization_header(conn, account) do
-    [sysid] = conn |> get_req_header("system-identifier")
-    {:ok, token, _} = account |> Guardian.encode_and_sign(%{"sysid" => sysid})
+    {:ok, token, _} = account |> Guardian.encode_and_sign(%{})
 
     conn
     |> put_req_header("authorization", "Bearer " <> token)
@@ -50,7 +47,6 @@ defmodule AccountsManagementAPIWeb.Auth.AuthHelper do
 
   def new_conn(account_id) do
     build_conn()
-    |> put_req_header("system-identifier", @system_identifier)
     |> put_req_header("accept", "application/json")
     |> with_valid_authorization_header(account_id)
   end

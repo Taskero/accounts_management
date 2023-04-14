@@ -8,8 +8,6 @@ defmodule AccountsManagementAPIWeb.AccountControllerTest do
 
   doctest AccountsManagementAPIWeb.AccountController
 
-  @system_identifier "my_cool_system"
-
   @invalid_attrs %{
     confirmed_at: nil,
     email: nil,
@@ -20,17 +18,15 @@ defmodule AccountsManagementAPIWeb.AccountControllerTest do
     password_hash: nil,
     picture: nil,
     start_date: nil,
-    status: nil,
-    system_identifier: nil
+    status: nil
   }
 
   setup %{conn: conn} do
-    account = insert(:account, system_identifier: @system_identifier)
+    account = insert(:account)
 
     conn =
       conn
       |> put_req_header("accept", "application/json")
-      |> put_req_header("system-identifier", @system_identifier)
       |> AuthHelper.with_valid_authorization_header(account.id)
 
     {:ok, conn: conn, account: account}
@@ -63,7 +59,7 @@ defmodule AccountsManagementAPIWeb.AccountControllerTest do
       assert %{"id" => id} = json_response(conn, 201)["data"]
 
       conn =
-        new_conn()
+        build_conn()
         |> AuthHelper.with_valid_authorization_header(id)
         |> get(~p"/api/accounts/#{id}")
 
@@ -77,8 +73,7 @@ defmodule AccountsManagementAPIWeb.AccountControllerTest do
                "name" => "John",
                "picture" => nil,
                "start_date" => nil,
-               "status" => "pending",
-               "system_identifier" => @system_identifier
+               "status" => "pending"
              } = json_response(conn, 200)["data"]
     end
 
@@ -174,11 +169,11 @@ defmodule AccountsManagementAPIWeb.AccountControllerTest do
       assert %{"id" => ^id} = json_response(conn, 200)["data"]
 
       conn =
-        new_conn()
+        build_conn()
         |> AuthHelper.with_valid_authorization_header(account.id)
         |> get(~p"/api/accounts/#{id}")
 
-      insert(:account, system_identifier: @system_identifier)
+      insert(:account)
 
       %{
         "id" => ^id,
@@ -204,7 +199,7 @@ defmodule AccountsManagementAPIWeb.AccountControllerTest do
       assert response(conn, 204)
 
       conn =
-        new_conn()
+        build_conn()
         |> AuthHelper.with_valid_authorization_header(account.id)
         |> get(~p"/api/accounts/#{account}")
 
@@ -213,12 +208,8 @@ defmodule AccountsManagementAPIWeb.AccountControllerTest do
   end
 
   defp create_account(_) do
-    account = insert(:account, system_identifier: @system_identifier)
+    account = insert(:account)
 
     %{account: account}
-  end
-
-  defp new_conn() do
-    build_conn() |> put_req_header("system-identifier", @system_identifier)
   end
 end
