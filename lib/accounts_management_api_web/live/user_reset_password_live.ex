@@ -3,9 +3,6 @@ defmodule AccountsManagementAPIWeb.UserResetPasswordLive do
 
   alias AccountsManagementAPI.Accounts
 
-  attr :done_url, :string, default: "/"
-  attr :login_url, :string, default: "/users/log_in"
-
   def render(assigns) do
     ~H"""
     <div class="mx-auto max-w-sm">
@@ -34,7 +31,8 @@ defmodule AccountsManagementAPIWeb.UserResetPasswordLive do
       </.simple_form>
 
       <p class="text-center mt-4">
-        <.link href={@register_url}>Register</.link> | <.link href={@login_url}>Log in</.link>
+        <.link href={~p"/users/register"}>Register</.link>
+        | <.link href={~p"/users/log-in"}>Log in</.link>
       </p>
     </div>
     """
@@ -63,7 +61,7 @@ defmodule AccountsManagementAPIWeb.UserResetPasswordLive do
         {:noreply,
          socket
          |> put_flash(:info, "Password reset successfully.")
-         |> redirect(to: socket.assigns.login_url)}
+         |> redirect(to: ~p"/users/log-in")}
 
       {:error, changeset} ->
         {:noreply, assign_form(socket, Map.put(changeset, :action, :insert))}
@@ -81,7 +79,7 @@ defmodule AccountsManagementAPIWeb.UserResetPasswordLive do
     else
       socket
       |> put_flash(:error, "Reset password link is invalid or it has expired.")
-      |> redirect(to: socket.assigns.done_url)
+      |> redirect(to: ~p"/")
     end
   end
 

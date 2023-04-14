@@ -165,4 +165,4 @@ defmodule ExampleControllerTest do
   end
 ```
 
-Happy coding 🐣
+Happy coding 🐣 !

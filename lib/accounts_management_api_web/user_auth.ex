@@ -93,6 +93,7 @@ defmodule AccountsManagementAPIWeb.UserAuth do
   def fetch_current_user(conn, _opts) do
     {user_token, conn} = ensure_user_token(conn)
     user = user_token && Accounts.get_user_by_session_token(user_token)
+
     assign(conn, :current_user, user)
   end
 
@@ -158,7 +159,7 @@ defmodule AccountsManagementAPIWeb.UserAuth do
       socket =
         socket
         |> Phoenix.LiveView.put_flash(:error, "You must log in to access this page.")
-        |> Phoenix.LiveView.redirect(to: "/users/log_in")
+        |> Phoenix.LiveView.redirect(to: ~p"/users/log-in")
 
       {:halt, socket}
     end
@@ -208,7 +209,7 @@ defmodule AccountsManagementAPIWeb.UserAuth do
       conn
       |> put_flash(:error, "You must log in to access this page.")
       |> maybe_store_return_to()
-      |> redirect(to: "/users/log_in")
+      |> redirect(to: "/users/log-in")
       |> halt()
     end
   end

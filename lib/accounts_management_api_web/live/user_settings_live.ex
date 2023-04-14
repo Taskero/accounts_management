@@ -3,11 +3,6 @@ defmodule AccountsManagementAPIWeb.UserSettingsLive do
 
   alias AccountsManagementAPI.Accounts
 
-  attr :settings_url, :string, default: "/users/settings"
-  attr :login_url, :string, default: "/users/log_in?_action=password_updated"
-  attr :done_url, :string, default: "/"
-  attr :confirm_email_url, :string, default: "/users/settings/confirm_email/"
-
   def render(assigns) do
     ~H"""
     <.header class="text-center">
@@ -42,7 +37,7 @@ defmodule AccountsManagementAPIWeb.UserSettingsLive do
         <.simple_form
           for={@password_form}
           id="password_form"
-          action={@login_url}
+          action={~p"/users/log-in?_action=password_updated"}
           method="post"
           phx-change="validate_password"
           phx-submit="update_password"
@@ -88,7 +83,7 @@ defmodule AccountsManagementAPIWeb.UserSettingsLive do
           put_flash(socket, :error, "Email change link is invalid or it has expired.")
       end
 
-    {:ok, push_navigate(socket, to: socket.assign.settings_url)}
+    {:ok, push_navigate(socket, to: ~p"/users/settings")}
   end
 
   def mount(_params, _session, socket) do
@@ -129,7 +124,7 @@ defmodule AccountsManagementAPIWeb.UserSettingsLive do
         Accounts.deliver_user_update_email_instructions(
           applied_user,
           user.email,
-          socket.assign.confirm_email_url
+          &url(~p"/users/settings/confirm_email/#{&1}")
         )
 
         info = "A link to confirm your email change has been sent to the new address."

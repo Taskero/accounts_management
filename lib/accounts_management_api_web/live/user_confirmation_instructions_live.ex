@@ -3,11 +3,6 @@ defmodule AccountsManagementAPIWeb.UserConfirmationInstructionsLive do
 
   alias AccountsManagementAPI.Accounts
 
-  attr :register_url, :string, default: "/users/register"
-  attr :login_url, :string, default: "/users/log_in"
-  attr :done_url, :string, default: "/"
-  attr :confirm_url, :string, default: "/users/confirm/"
-
   def render(assigns) do
     ~H"""
     <div class="mx-auto max-w-sm">
@@ -26,7 +21,8 @@ defmodule AccountsManagementAPIWeb.UserConfirmationInstructionsLive do
       </.simple_form>
 
       <p class="text-center mt-4">
-        <.link href={@register_url}>Register</.link> | <.link href={@login_url}>Log in</.link>
+        <.link href={~p"/users/register"}>Register</.link>
+        | <.link href={~p"/users/log-in"}>Log in</.link>
       </p>
     </div>
     """
@@ -40,7 +36,7 @@ defmodule AccountsManagementAPIWeb.UserConfirmationInstructionsLive do
     if user = Accounts.get_user_by_email(email) do
       Accounts.deliver_user_confirmation_instructions(
         user,
-        socket.assign.confirm_url
+        &url(~p"/users/confirm/#{&1}")
       )
     end
 
@@ -50,6 +46,6 @@ defmodule AccountsManagementAPIWeb.UserConfirmationInstructionsLive do
     {:noreply,
      socket
      |> put_flash(:info, info)
-     |> redirect(to: socket.assigns.done_url)}
+     |> redirect(to: ~p"/")}
   end
 end

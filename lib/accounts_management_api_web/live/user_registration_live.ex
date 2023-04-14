@@ -1,12 +1,10 @@
 defmodule AccountsManagementAPIWeb.UserRegistrationLive do
   use AccountsManagementAPIWeb, :live_view
 
+  require Logger
+
   alias AccountsManagementAPI.Accounts
   alias AccountsManagementAPI.Accounts.User
-
-  attr :confirm_url, :string, default: "/users/confirm/"
-  attr :login_url, :string, default: "/users/log_in/"
-  attr :login_registered_url, :string, default: "/users/log_in?_action=registered"
 
   def render(assigns) do
     ~H"""
@@ -15,7 +13,7 @@ defmodule AccountsManagementAPIWeb.UserRegistrationLive do
         Register for an user
         <:subtitle>
           Already registered?
-          <.link navigate={@login_url} class="font-semibold text-brand hover:underline">
+          <.link navigate={~p"/users/log-in/"} class="font-semibold text-brand hover:underline">
             Sign in
           </.link>
           to your user now.
@@ -28,7 +26,7 @@ defmodule AccountsManagementAPIWeb.UserRegistrationLive do
         phx-submit="save"
         phx-change="validate"
         phx-trigger-action={@trigger_submit}
-        action={@login_registered_url}
+        action={~p"/users/log-in?_action=registered"}
         method="post"
       >
         <.error :if={@check_errors}>
@@ -37,9 +35,14 @@ defmodule AccountsManagementAPIWeb.UserRegistrationLive do
 
         <.input field={@form[:email]} type="email" label="Email" required />
         <.input field={@form[:password]} type="password" label="Password" required />
+        <.input field={@form[:password_confirmation]} type="password" label="Confirm" required />
 
         <:actions>
           <.button phx-disable-with="Creating user..." class="w-full">Create an user</.button>
+
+          <.link href={~p"/"} class="text-xl font-semibold text-zinc-500">
+            cancel
+          </.link>
         </:actions>
       </.simple_form>
     </div>
@@ -63,13 +66,17 @@ defmodule AccountsManagementAPIWeb.UserRegistrationLive do
         {:ok, _} =
           Accounts.deliver_user_confirmation_instructions(
             user,
-            socket.assign.confirm_url
+            &url(~p"/users/confirm/#{&1}")
           )
 
         changeset = Accounts.change_user_registration(user)
+
+        Logger.debug("User created: #{inspect(user)}")
+        Logger.debug("socket: #{inspect(socket)}")
         {:noreply, socket |> assign(trigger_submit: true) |> assign_form(changeset)}
 
       {:error, %Ecto.Changeset{} = changeset} ->
+        Logger.debug("Error creating user: #{inspect(changeset)}")
         {:noreply, socket |> assign(check_errors: true) |> assign_form(changeset)}
     end
   end

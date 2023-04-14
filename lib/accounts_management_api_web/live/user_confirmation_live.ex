@@ -3,10 +3,6 @@ defmodule AccountsManagementAPIWeb.UserConfirmationLive do
 
   alias AccountsManagementAPI.Accounts
 
-  attr :register_url, :string, default: "/users/register"
-  attr :login_url, :string, default: "/users/log_in"
-  attr :done_url, :string, default: "/"
-
   def render(%{live_action: :edit} = assigns) do
     ~H"""
     <div class="mx-auto max-w-sm">
@@ -20,7 +16,8 @@ defmodule AccountsManagementAPIWeb.UserConfirmationLive do
       </.simple_form>
 
       <p class="text-center mt-4">
-        <.link href={@register_url}>Register</.link> | <.link href={@login_url}>Log in</.link>
+        <.link href={~p"/users/register"}>Register</.link>
+        | <.link href={~p"/users/log-in"}>Log in</.link>
       </p>
     </div>
     """
@@ -39,7 +36,7 @@ defmodule AccountsManagementAPIWeb.UserConfirmationLive do
         {:noreply,
          socket
          |> put_flash(:info, "User confirmed successfully.")
-         |> redirect(to: socket.assigns.done_url)}
+         |> redirect(to: ~p"/")}
 
       :error ->
         # If there is a current user and the user was already confirmed,
@@ -48,13 +45,13 @@ defmodule AccountsManagementAPIWeb.UserConfirmationLive do
         # a warning message.
         case socket.assigns do
           %{current_user: %{confirmed_at: confirmed_at}} when not is_nil(confirmed_at) ->
-            {:noreply, redirect(socket, to: socket.assigns.done_url)}
+            {:noreply, redirect(socket, to: ~p"/")}
 
           %{} ->
             {:noreply,
              socket
              |> put_flash(:error, "User confirmation link is invalid or it has expired.")
-             |> redirect(to: socket.assigns.done_url)}
+             |> redirect(to: ~p"/")}
         end
     end
   end
