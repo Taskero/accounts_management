@@ -6,8 +6,8 @@ defmodule AccountsManagementAPIWeb.Auth.Guardian do
 
   use Guardian, otp_app: :accounts_management_api
 
-  alias AccountsManagementAPI.Users
-  alias AccountsManagementAPI.Users.Account
+  alias AccountsManagementAPI.Accounts
+  alias AccountsManagementAPI.Accounts.User
 
   @doc """
   Subject of the Payload in the JWT.
@@ -18,7 +18,7 @@ defmodule AccountsManagementAPIWeb.Auth.Guardian do
     {:ok, "72d6fe29-b325-4d1a-8117-434400ce16c8"}
   """
   @spec subject_for_token(any, any) :: {:error, :no_user_provided} | {:ok, binary}
-  def subject_for_token(%Account{id: id}, _claims),
+  def subject_for_token(%User{id: id}, _claims),
     do: {:ok, id |> to_string()}
 
   def subject_for_token(_, _), do: {:error, :no_user_provided}
@@ -29,7 +29,7 @@ defmodule AccountsManagementAPIWeb.Auth.Guardian do
   """
   @spec resource_from_claims(any) :: {:error, :no_sub_provided | :not_found} | {:ok, any}
   def resource_from_claims(%{"sub" => id}),
-    do: Users.get_account(id)
+    do: Accounts.get_user(id)
 
   def resource_from_claims(_), do: {:error, :no_sub_provided}
 end

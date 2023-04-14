@@ -2,12 +2,12 @@ defmodule AccountsManagementAPIWeb.AuthJSON do
   @moduledoc false
 
   @doc false
-  def show(%{token: token, expiration: expiration, type: type, account_id: account_id}) do
+  def show(%{token: token, expiration: expiration, type: type, user_id: user_id}) do
     %{
       access_token: token,
       expires_in: expiration,
       token_type: type,
-      account_id: account_id
+      user_id: user_id
     }
   end
 

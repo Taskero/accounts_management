@@ -9,14 +9,15 @@ defmodule AccountsManagementAPIWeb.AuthController do
 
   require Logger
 
-  alias AccountsManagementAPI.Users
+  alias AccountsManagementAPI.Accounts
   alias AccountsManagementAPIWeb.Auth.Guardian
 
   # /api/auth
   def create(conn, %{"email" => email, "password" => pass}) do
-    with {:ok, account} <- seek_user(email),
-         {:ok, _} <- Argon2.check_pass(account, pass),
-         {:ok, jwt, %{"exp" => exp}} <- account |> Guardian.encode_and_sign(%{}) do
+    with user <- Accounts.get_user_by_email_and_password(email, pass),
+         # {:ok, user} <- seek_user(email),
+         #      {:ok, _} <- Argon2.check_pass(pass, user.password_hash),
+         {:ok, jwt, %{"exp" => exp}} <- user |> Guardian.encode_and_sign(%{}) do
       conn
       |> put_status(:created)
       |> put_resp_header("authorization", jwt)
@@ -24,7 +25,7 @@ defmodule AccountsManagementAPIWeb.AuthController do
         token: jwt,
         expiration: exp,
         type: "Bearer",
-        account_id: account.id
+        user_id: user.id
       })
     else
       _ ->
@@ -46,7 +47,7 @@ defmodule AccountsManagementAPIWeb.AuthController do
         token: new_token,
         expiration: exp,
         type: "Bearer",
-        account_id: sub
+        user_id: sub
       })
     else
       _ ->
@@ -57,12 +58,12 @@ defmodule AccountsManagementAPIWeb.AuthController do
   end
 
   def seek_user(email) do
-    case [email: email] |> Users.list_accounts() do
-      [account] ->
-        {:ok, account}
+    case [email: email] |> Accounts.list_users() do
+      [user] ->
+        {:ok, user}
 
       _ ->
-        Logger.info("Account not found for #{email}")
+        Logger.info("User not found for #{email}")
         {:error, :not_found}
     end
   end

@@ -37,6 +37,8 @@ config :accounts_management_api, AccountsManagementAPIWeb.Auth.Guardian,
   secret_key: System.get_env("SECRET_KEY_BASE"),
   serializer: AccountsManagementAPIWeb.Auth.GuardianSerializer
 
+config :accounts_management_api, AccountsManagementAPI.Mailer, adapter: Swoosh.Adapters.Local
+
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{config_env()}.exs"

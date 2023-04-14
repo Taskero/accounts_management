@@ -1,4 +1,4 @@
-defmodule AccountsManagementAPI.Users.Phone do
+defmodule AccountsManagementAPI.Accounts.Phone do
   @moduledoc false
 
   use Ecto.Schema
@@ -7,7 +7,7 @@ defmodule AccountsManagementAPI.Users.Phone do
   import Ecto.Query
 
   alias AccountsManagementAPI.Repo
-  alias AccountsManagementAPI.Users.Phone
+  alias AccountsManagementAPI.Accounts.Phone
 
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
@@ -18,13 +18,13 @@ defmodule AccountsManagementAPI.Users.Phone do
     field(:default, :boolean, default: false)
     field(:verified, :boolean, default: false)
 
-    belongs_to(:account, AccountsManagementAPI.Users.Account)
+    belongs_to(:user, AccountsManagementAPI.Accounts.User)
 
     timestamps()
   end
 
   @optional ~w(default verified)a
-  @required ~w(account_id type name number)a
+  @required ~w(user_id type name number)a
 
   @doc false
   def changeset(phone, attrs) do
@@ -33,25 +33,25 @@ defmodule AccountsManagementAPI.Users.Phone do
     |> validate_inclusion(:type, ~w(personal business))
     |> validate_length(:number, min: 8, max: 20)
     |> validate_required(@required)
-    |> unique_constraint([:name, :account_id], name: :phones_name_account_id_index)
+    |> unique_constraint([:name, :user_id], name: :phones_name_user_id_index)
   end
 
   @doc """
-  Sets an unique default phone for an account.
+  Sets an unique default phone for an user.
 
   ## Examples
 
-      iex> "e6bc1093-2d73-4d0e-b1fe-b7b538fe60f1" |> Users.get_phone |> set_default()
+      iex> "e6bc1093-2d73-4d0e-b1fe-b7b538fe60f1" |> Accounts.get_phone |> set_default()
       {:ok, %Phone{}}
 
       iex> set_default(phone)
       {:error, reason}
   """
-  def set_default(%Phone{account_id: account_id, id: id}) do
+  def set_default(%Phone{user_id: user_id, id: id}) do
     Ecto.Multi.new()
     |> Ecto.Multi.update_all(
       :unset_default,
-      Phone |> where(account_id: ^account_id),
+      Phone |> where(user_id: ^user_id),
       [set: [default: false]],
       []
     )
