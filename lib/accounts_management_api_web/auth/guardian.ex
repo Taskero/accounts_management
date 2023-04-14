@@ -4,7 +4,7 @@ defmodule AccountsManagementAPIWeb.Auth.Guardian do
   Authentication `token` based, with JWT tokens.
   """
 
-  use Guardian, otp_app: :taskero
+  use Guardian, otp_app: :accounts_management_api
 
   alias AccountsManagementAPI.Accounts
   alias AccountsManagementAPI.Accounts.User

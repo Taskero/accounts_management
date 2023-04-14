@@ -23,25 +23,25 @@ defmodule AccountsManagementAPIWeb.Router do
     plug(:fetch_current_user)
   end
 
-  # # Unsecure routes
-  # scope "/api", AccountsManagementAPIWeb do
-  #   pipe_through(:api)
+  # Unsecure routes
+  scope "/api", AccountsManagementAPIWeb do
+    pipe_through(:api)
 
-  #   resources("/auth", AuthController, only: [:create])
-  #   resources("/auth/refresh", AuthController, only: [:create])
+    resources("/auth", AuthController, only: [:create])
+    resources("/auth/refresh", AuthController, only: [:create])
 
-  #   resources("/users", UserController, only: [:create])
-  # end
+    resources("/users", UserController, only: [:create])
+  end
 
-  # # Secure routes
-  # scope "/api", AccountsManagementAPIWeb do
-  #   pipe_through([:api, :auth])
+  # Secure routes
+  scope "/api", AccountsManagementAPIWeb do
+    pipe_through([:api, :auth])
 
-  #   resources "/users", UserController, only: [:index, :show, :update, :delete] do
-  #     resources("/addresses", AddressController, only: [:index, :create, :show, :update, :delete])
-  #     resources("/phones", PhoneController, only: [:index, :create, :show, :update, :delete])
-  #   end
-  # end
+    resources "/users", UserController, only: [:index, :show, :update, :delete] do
+      resources("/addresses", AddressController, only: [:index, :create, :show, :update, :delete])
+      resources("/phones", PhoneController, only: [:index, :create, :show, :update, :delete])
+    end
+  end
 
   # # Enable LiveDashboard in development
   # if Application.compile_env(:accounts_management_api, :dev_routes) do
