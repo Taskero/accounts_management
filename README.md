@@ -109,6 +109,29 @@ end
 +  secret_key: "SECRET_KEY_BASE"
 ```
 
+optional to get log from this
+
+```elixir
+config :logger,
+   backends: [:console],
+   compile_time_purge_matching: [
+     [application: :accounts_management_api]
+   ]
+```
+
+`config/dev.exs`
+
+```elixir
+config :accounts_management_api, AccountsManagementAPI.Repo,
+   username: "postgres",
+   password: "postgres",
+   hostname: "localhost",
+   database: "taskero_dev",
+   stacktrace: true,
+   show_sensitive_data_on_connection_error: true,
+   pool_size: 10
+```
+
 `lib/project_web/router.ex` for rest API
 
 ```elixir
@@ -135,6 +158,37 @@ end
 +      resources("/addresses", AddressController, only: [:index, :create, :show, :update, :delete])
 +      resources("/phones", PhoneController, only: [:index, :create, :show, :update, :delete])
 +    end
++  end
+
+
++  # UI #################### (Live Views)
++
++  scope "/", AccountsManagementAPIWeb do
++    pipe_through([:browser])
++
++    delete("/users/log-out", UserSessionController, :delete)
++
++    live_session :current_user,
++      on_mount: [{AccountsManagementAPIWeb.UserAuth, :mount_current_user}] do
++      live("/users/confirm/:token", UserConfirmationLive, :edit)
++      live("/users/confirm", UserConfirmationInstructionsLive, :new)
++    end
++  end
++
++  ## Authentication routes
++
++  scope "/", AccountsManagementAPIWeb do
++    pipe_through([:browser, :redirect_if_user_is_authenticated])
++
++    live_session :redirect_if_user_is_authenticated,
++      on_mount: [{AccountsManagementAPIWeb.UserAuth, :redirect_if_user_is_authenticated}] do
++      live("/users/register", UserRegistrationLive, :new)
++      live("/users/log-in", UserLoginLive, :new)
++      live("/users/reset_password", UserForgotPasswordLive, :new)
++      live("/users/reset_password/:token", UserResetPasswordLive, :edit)
++    end
++
++    post("/users/log-in", UserSessionController, :create)
 +  end
 ```
 
