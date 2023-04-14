@@ -92,6 +92,18 @@ end
 +  ],
 +  pubsub_server: AccountsManagementAPI.PubSub,
 +  live_view: [signing_salt: "SOMETHING"]
+
++config :accounts_management_api, AccountsManagementAPI.Mailer, adapter: Swoosh.Adapters.Local
+```
+
+optional to get log from this
+
+```elixir
++config :logger,
++   backends: [:console],
++   compile_time_purge_matching: [
++     [application: :accounts_management_api]
++   ]
 ```
 
 `config/test.exs`
@@ -109,15 +121,6 @@ end
 +  secret_key: "SECRET_KEY_BASE"
 ```
 
-optional to get log from this
-
-```elixir
-config :logger,
-   backends: [:console],
-   compile_time_purge_matching: [
-     [application: :accounts_management_api]
-   ]
-```
 
 `config/dev.exs`
 
@@ -135,6 +138,8 @@ config :accounts_management_api, AccountsManagementAPI.Repo,
 `lib/project_web/router.ex` for rest API
 
 ```elixir
++  import AccountsManagementAPIWeb.UserAuth
++
 +  pipeline :auth do
 +    plug AccountsManagementAPIWeb.Auth.Pipeline
 +  end
