@@ -1,7 +1,7 @@
 defmodule AccountsManagementAPI.Accounts.User do
   @moduledoc false
 
-  alias AccountsManagementAPI.Accounts.{Phone, Address}
+  alias AccountsManagementAPI.Accounts.{Phone, Address, User}
 
   use Ecto.Schema
   import Ecto.Changeset
@@ -189,6 +189,22 @@ defmodule AccountsManagementAPI.Accounts.User do
     |> hash_password()
     |> validate_email_format()
     |> unique_constraint(:email)
+  end
+
+  @doc false
+  def default_phone(%User{} = user) do
+    case user.phones |> Enum.find(& &1.default) do
+      nil -> nil
+      phone -> phone.number
+    end
+  end
+
+  @doc false
+  def default_address(%User{} = user) do
+    case user.addresses |> Enum.find(& &1.default) do
+      nil -> nil
+      address -> address.number
+    end
   end
 
   defp hash_password(%Ecto.Changeset{valid?: true, changes: %{password: password}} = changeset) do
