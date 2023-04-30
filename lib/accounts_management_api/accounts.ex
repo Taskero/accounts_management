@@ -356,6 +356,32 @@ defmodule AccountsManagementAPI.Accounts do
   ########### Addresses ###########
 
   @doc """
+
+      ## Examples
+
+      iex>  UsersManagementAPI.Accounts.list_addresses()
+      [%UsersManagementAPI.Users.Address{}]
+
+  """
+  def list_addresses(opts \\ []) do
+    query = from(u in Address, order_by: :name)
+
+    opts
+    |> Enum.reduce(query, fn filter, query ->
+      query |> filter_query([filter])
+    end)
+    |> Repo.all()
+  end
+
+  defp filter_query(query, user_id: user_id) do
+    query |> where([a], a.user_id == ^user_id)
+  end
+
+  defp filter_query(query, default: default) do
+    query |> where([a], a.default == ^default)
+  end
+
+  @doc """
   Gets a single address, including the parent user.
 
   ## Examples
@@ -416,15 +442,22 @@ defmodule AccountsManagementAPI.Accounts do
   {:error, %Ecto.Changeset{}}
 
   """
-  def update_address(%Address{default: true} = address, attrs) do
-    with {:ok, _} <- Address.set_default(address) do
-      address
-      |> Address.changeset(attrs)
-      |> Repo.update()
-    end
-  end
-
   def update_address(%Address{} = address, attrs) do
+    case {Map.get(attrs, "default"), address.default} do
+      {true, _} ->
+        Address.set_default(address)
+
+      {false, true} ->
+        # un marking default
+        new_default =
+          list_addresses(user_id: address.user_id) |> Enum.find(fn p -> p.id != address.id end)
+
+        Address.set_default(new_default)
+
+      _ ->
+        :ok
+    end
+
     address
     |> Address.changeset(attrs)
     |> Repo.update()
@@ -481,6 +514,24 @@ defmodule AccountsManagementAPI.Accounts do
   end
 
   ########### Phones ###########
+
+  @doc """
+
+      ## Examples
+
+      iex>  UsersManagementAPI.Accounts.list_phones()
+      [%UsersManagementAPI.Users.Phone{}]
+
+  """
+  def list_phones(opts \\ []) do
+    query = from(u in Phone, order_by: :name)
+
+    opts
+    |> Enum.reduce(query, fn filter, query ->
+      query |> filter_query([filter])
+    end)
+    |> Repo.all()
+  end
 
   @doc """
   Gets a single phone, including the parent user.
@@ -545,17 +596,24 @@ defmodule AccountsManagementAPI.Accounts do
   {:error, %Ecto.Changeset{}}
 
   """
-  def update_phone(%Phone{default: true} = phone, attrs) do
+  def update_phone(%Phone{} = phone, attrs) do
     attrs = Map.put(attrs, "verified", false)
 
-    with {:ok, _} <- Phone.set_default(phone) do
-      phone
-      |> Phone.changeset(attrs)
-      |> Repo.update()
-    end
-  end
+    case {Map.get(attrs, "default"), phone.default} do
+      {true, _} ->
+        Phone.set_default(phone)
 
-  def update_phone(%Phone{} = phone, attrs) do
+      {false, true} ->
+        # un marking default
+        new_default =
+          list_phones(user_id: phone.user_id) |> Enum.find(fn p -> p.id != phone.id end)
+
+        Phone.set_default(new_default)
+
+      _ ->
+        :ok
+    end
+
     phone
     |> Phone.changeset(attrs)
     |> Repo.update()
@@ -621,22 +679,8 @@ defmodule AccountsManagementAPI.Accounts do
       [%UsersManagementAPI.Users.User{}]
 
   """
-  def list_users() do
-    from(a in User,
-      left_join: adr in assoc(a, :addresses),
-      left_join: p in assoc(a, :phones),
-      preload: [:addresses, :phones]
-    )
-    |> Repo.all()
-  end
-
-  def list_users(opts) do
-    query =
-      from(a in User,
-        left_join: adr in assoc(a, :addresses),
-        left_join: p in assoc(a, :phones),
-        preload: [:addresses, :phones]
-      )
+  def list_users(opts \\ []) do
+    query = from(u in User)
 
     opts
     |> Enum.reduce(query, fn filter, query ->

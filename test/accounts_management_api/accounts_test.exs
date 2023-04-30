@@ -773,6 +773,37 @@ defmodule AccountsManagementAPI.AccountsTest do
       assert {:ok, %Address{default: false}} = Accounts.get_address(id)
     end
 
+    test "update_address/2 changing defaults" do
+      user = insert(:user)
+      first_address = insert(:address, user: user, default: true)
+      [edit | _] = insert_list(4, :address, user: user)
+
+      assert {:ok, address} = Accounts.update_address(edit, %{"default" => true})
+      assert address.default == true
+
+      addresses = Accounts.list_addresses(user_id: user.id)
+      assert addresses |> length == 5
+      assert addresses |> Enum.filter(& &1.default) |> Enum.count() == 1
+
+      assert {:ok, address} =
+               Accounts.update_address(first_address, %{
+                 "default" => true,
+                 "name" => "something new"
+               })
+
+      assert address.default == true
+      assert address.name == "something new"
+      addresses = Accounts.list_addresses(user_id: user.id)
+      assert addresses |> length == 5
+      assert addresses |> Enum.filter(& &1.default) |> Enum.count() == 1
+
+      # another is the default
+      Accounts.delete_address(address)
+      addresses = Accounts.list_addresses(user_id: user.id)
+      assert addresses |> length == 4
+      assert addresses |> Enum.filter(& &1.default) |> Enum.count() == 1
+    end
+
     test "update_address/2 with invalid data returns error changeset" do
       address = insert(:address, user: insert(:user))
 
@@ -902,6 +933,42 @@ defmodule AccountsManagementAPI.AccountsTest do
 
       # check that phone2 is not default anymore
       assert {:ok, %Phone{default: false}} = Accounts.get_phone(id)
+    end
+
+    test "update_phone/2 changing defaults" do
+      user = insert(:user)
+      first_phone = insert(:phone, user: user, default: true)
+      [edit | _] = insert_list(4, :phone, user: user)
+
+      assert {:ok, phone} = Accounts.update_phone(edit, %{"default" => true})
+      assert phone.default == true
+
+      phones = Accounts.list_phones(user_id: user.id)
+      assert phones |> length == 5
+      assert phones |> Enum.filter(& &1.default) |> Enum.count() == 1
+
+      assert {:ok, phone} =
+               Accounts.update_phone(first_phone, %{"default" => true, "number" => "1234567890"})
+
+      assert phone.default == true
+      assert phone.number == "1234567890"
+      phones = Accounts.list_phones(user_id: user.id)
+      assert phones |> length == 5
+      assert phones |> Enum.filter(& &1.default) |> Enum.count() == 1
+
+      # If un mark default, another is the default
+      assert {:ok, phone} = Accounts.update_phone(phone, %{"default" => false})
+      phones = Accounts.list_phones(user_id: user.id)
+      assert phones |> length == 5
+      assert phones |> Enum.filter(& &1.default) |> Enum.count() == 1
+      default_phone = phones |> Enum.filter(& &1.default) |> Enum.at(0)
+      assert default_phone.id != phone.id
+
+      # another is the default
+      Accounts.delete_phone(phone)
+      phones = Accounts.list_phones(user_id: user.id)
+      assert phones |> length == 4
+      assert phones |> Enum.filter(& &1.default) |> Enum.count() == 1
     end
 
     test "update_phone/2 with invalid data returns error changeset" do

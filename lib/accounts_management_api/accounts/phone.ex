@@ -55,11 +55,9 @@ defmodule AccountsManagementAPI.Accounts.Phone do
       [set: [default: false]],
       []
     )
-    |> Ecto.Multi.update_all(
+    |> Ecto.Multi.update(
       :set_default,
-      Phone |> where(id: ^id),
-      [set: [default: true]],
-      []
+      Ecto.Changeset.change(%Phone{id: id}, default: true)
     )
     |> Repo.transaction()
   end
