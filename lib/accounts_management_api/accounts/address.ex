@@ -59,11 +59,9 @@ defmodule AccountsManagementAPI.Accounts.Address do
       [set: [default: false]],
       []
     )
-    |> Ecto.Multi.update_all(
+    |> Ecto.Multi.update(
       :set_default,
-      Address |> where(id: ^id),
-      [set: [default: true]],
-      []
+      Ecto.Changeset.change(%Address{id: id}, default: true)
     )
     |> Repo.transaction()
   end
