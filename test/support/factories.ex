@@ -35,6 +35,8 @@ defmodule AccountsManagementAPI.Test.Factories do
       country_code: Faker.Address.country_code(),
       zip_code: Faker.Address.postcode(),
       default: true,
+      lat: Faker.Address.latitude(),
+      lon: Faker.Address.longitude(),
       user: build(:user)
     }
   end

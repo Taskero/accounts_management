@@ -46,7 +46,9 @@ defmodule AccountsManagementAPIWeb.AddressControllerTest do
             "city": "Springfield",
             "state": "Oregon",
             "country_code": "US",
-            "zip_code": "12345"
+            "zip_code": "12345",
+            "lat": "-12.345",
+            "lon": "30.123"
           }
         }
         """

@@ -45,6 +45,8 @@ defmodule AccountsManagementAPI.Repo.Migrations.CreateUsersAuthTables do
       add(:country_code, :string, null: false)
       add(:zip_code, :string, null: false)
       add(:default, :boolean, default: false, null: false)
+      add(:lat, :float)
+      add(:lon, :float)
 
       add(:user_id, references(:users, type: :binary_id, on_delete: :delete_all), null: false)
 
