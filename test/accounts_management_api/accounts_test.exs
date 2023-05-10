@@ -551,7 +551,7 @@ defmodule AccountsManagementAPI.AccountsTest do
     test "list_users/0 returns all users" do
       %{} = user = insert(:user)
 
-      assert Accounts.list_users() == [
+      assert Accounts.list_users() |> Repo.preload([:addresses, :phones]) == [
                %{user | password: nil, addresses: [], phones: []}
              ]
     end
@@ -694,6 +694,8 @@ defmodule AccountsManagementAPI.AccountsTest do
         "state" => "Oregon",
         "country_code" => "US",
         "zip_code" => "12345",
+        "lat" => "-12.345",
+        "lon" => "12.345",
         "user_id" => user.id
       }
 
@@ -719,6 +721,8 @@ defmodule AccountsManagementAPI.AccountsTest do
         "state" => "Oregon",
         "country_code" => "US",
         "zip_code" => "12345",
+        "lat" => "-12.345",
+        "lon" => "12.345",
         "user_id" => user.id
       }
 

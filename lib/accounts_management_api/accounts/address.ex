@@ -20,6 +20,8 @@ defmodule AccountsManagementAPI.Accounts.Address do
     field(:state, :string)
     field(:country_code, :string)
     field(:zip_code, :string)
+    field(:lat, :float)
+    field(:lon, :float)
     field(:default, :boolean, default: false)
 
     belongs_to(:user, AccountsManagementAPI.Accounts.User)
@@ -27,8 +29,8 @@ defmodule AccountsManagementAPI.Accounts.Address do
     timestamps()
   end
 
-  @optional ~w(line_2 default)a
-  @required ~w(user_id type name line_1 city state country_code zip_code)a
+  @optional ~w(line_2 line_1 city state country_code zip_code)a
+  @required ~w(user_id type name default lat lon)a
 
   @doc false
   def changeset(address, attrs) do
